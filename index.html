@@ -1670,8 +1670,14 @@ document.addEventListener('visibilitychange',()=>{
 async function boot(){
   await wait(30);paintMaps();$('loadMsg').textContent='Raising mountains…';await wait(20);
   buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
-  buildPlaces();buildIslands();buildMountains();buildTrees();buildLabels();updateCounts();renderQuest();setupComposer();resize();
-  if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),700);
+  buildPlaces();buildIslands();buildLabels();updateCounts();renderQuest();setupComposer();resize();
+  // First interactive scene before decorative terrain instancing.
+  if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
+  // Yield to the compositor, then add distant decorative detail progressively.
+  requestAnimationFrame(()=>setTimeout(()=>{
+    try{buildMountains();requestAnimationFrame(()=>setTimeout(()=>{try{buildTrees()}catch(e){console.warn('Trees unavailable',e)}},0))}
+    catch(e){console.warn('Mountain detail unavailable',e)}
+  },0));
   // Space creation is demand-driven so exploration remains responsive on first load.
   if(location.hash==='#space')ensureSpaceReady();
 }
