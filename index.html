@@ -1045,9 +1045,9 @@ let sunL,launchLight;
 function buildAtmosphere(){
   const atmosphere=new THREE.Mesh(new THREE.SphereGeometry(1.067,HQ?96:48,HQ?48:24),
     new THREE.ShaderMaterial({
-      uniforms:{uColor:{value:new THREE.Color('#63baff')},uStrength:{value:HQ?.42:.25}},
+      uniforms:{uColor:{value:new THREE.Color('#63baff')},uStrength:{value:HQ?.42:.25},uLight:{value:new THREE.Vector3(.4,.7,.5).normalize()}},
       vertexShader:`varying vec3 vNormal;varying vec3 vView;void main(){vec4 worldPos=modelMatrix*vec4(position,1.);vNormal=normalize(mat3(modelMatrix)*normal);vView=normalize(cameraPosition-worldPos.xyz);gl_Position=projectionMatrix*viewMatrix*worldPos;}`,
-      fragmentShader:`uniform vec3 uColor;uniform float uStrength;varying vec3 vNormal;varying vec3 vView;void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.5);gl_FragColor=vec4(uColor,rim*uStrength);}`,
+      fragmentShader:`uniform vec3 uColor;uniform float uStrength;uniform vec3 uLight;varying vec3 vNormal;varying vec3 vView;void main(){vec3 n=normalize(vNormal);float rim=pow(1.-abs(dot(n,normalize(vView))),3.5);float day=smoothstep(-.28,.48,dot(n,normalize(uLight)));gl_FragColor=vec4(uColor,rim*uStrength*(.13+.87*day));}`,
       side:THREE.BackSide,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
     }));
   atmosphere.frustumCulled=true;atmosphere.renderOrder=-1;world.add(atmosphere);
@@ -1082,8 +1082,10 @@ function buildPlaces(){
   issItem.update=dt=>{th+=dt*.16;node+=dt*.004;const u=new V3(Math.cos(node),0,-Math.sin(node)),w=new V3(Math.sin(node)*Math.cos(inc),Math.sin(inc),Math.cos(node)*Math.cos(inc));pv.copy(u).multiplyScalar(Math.cos(th)).addScaledVector(w,Math.sin(th));fv.copy(u).multiplyScalar(-Math.sin(th)).addScaledVector(w,Math.cos(th));iss.position.copy(pv).multiplyScalar(1.24);orient(iss,pv,fv);issItem.fwd=fv.clone();issItem.up=pv.clone()};
   movers.push(issItem);reg(issItem);
   // clouds
-  cloudMat=new THREE.MeshStandardMaterial({color:0xffffff,flatShading:!HQ,transparent:true,opacity:.92,roughness:1});
-  for(let i=0;i<(HQ?40:26);i++){const cg=new THREE.Group();const n=3+Math.floor(rand()*3);for(let k=0;k<n;k++){const m=new THREE.Mesh(new THREE.IcosahedronGeometry(.6+rand()*.5,HQ?2:0),cloudMat);m.position.set((k-n/2)*.7,rand()*.3,(rand()-.5)*.5);m.scale.y=.75;cg.add(m)}
+  cloudMat=new THREE.MeshStandardMaterial({color:0xf0f8ff,flatShading:!HQ,transparent:true,opacity:.88,roughness:1,depthWrite:true});
+  // Share a tiny cloud mesh library instead of allocating unique geometry for every puff.
+  const cloudGeometry=[.6,.75,.9,1.05].map(r=>new THREE.IcosahedronGeometry(r,HQ?2:0));
+  for(let i=0;i<(HQ?40:26);i++){const cg=new THREE.Group();const n=3+Math.floor(rand()*3);for(let k=0;k<n;k++){const m=new THREE.Mesh(cloudGeometry[Math.floor(rand()*cloudGeometry.length)],cloudMat);m.position.set((k-n/2)*.7,rand()*.3,(rand()-.5)*.5);m.scale.y=.75;cg.add(m)}
     const pivot=new THREE.Group();pivot.rotation.set(rand()*.6-.3,rand()*TAU,0);const lat=(rand()-.5)*120;cg.position.copy(ll2v(lat,0,1.085));cg.quaternion.setFromUnitVectors(UP,cg.position.clone().normalize());cg.scale.setScalar(.022+rand()*.012);pivot.add(cg);world.add(pivot);const sp=(.008+rand()*.01)*(rand()<.5?1:-1);animators.push(dt=>pivot.rotateY(dt*sp))}
 }
 function orient(obj,up,fwd){const u=up.clone().normalize(),z=fwd.clone().sub(u.clone().multiplyScalar(fwd.dot(u))).normalize(),x=new V3().crossVectors(u,z);obj.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,u,z))}
