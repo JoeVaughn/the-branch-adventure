@@ -21,5 +21,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: earth-browser-screenshot
-          path: earth-smoke.png
+          path: |
+            earth-smoke.png
+            space-smoke.png
           if-no-files-found: ignore
