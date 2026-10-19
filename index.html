@@ -1294,13 +1294,13 @@ function ringMesh(rin,rout,cols){const cv=document.createElement('canvas');cv.wi
 function sItem(o){o.cat='space';o.mode='space';o.label=o.label??true;ITEMS.set(o.id,o);spaceItems.push(o);const pr=Math.max(o.r*1.25,o.pickR||1.4);const pk=new THREE.Mesh(new THREE.SphereGeometry(pr,10,8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false}));pk.userData.item=o;o.obj.add(pk);spacePick.push(pk);return o}
 async function buildSpace(){
   // milky way sky
-  const SK=HQ?2:1,cv=document.createElement('canvas');cv.width=2048*SK;cv.height=1024*SK;const x=cv.getContext('2d');x.scale(SK,SK);x.fillStyle='#02030a';x.fillRect(0,0,2048,1024);
+  const SK=HQ?1.5:1,cv=document.createElement('canvas');cv.width=2048*SK;cv.height=1024*SK;const x=cv.getContext('2d');x.scale(SK,SK);x.fillStyle='#02030a';x.fillRect(0,0,2048,1024);
   const blob=(cx,cy,r,col,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,col.replace('A',a));g.addColorStop(1,col.replace('A',0));x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2)};
   for(let i=0;i<420;i++){const cx=rand()*2048,center=Math.exp(-Math.pow((cx-1024)/520,2));const cy=512+(rand()-.5)*(70+60*center)*1.6;const r=30+rand()*90*(.5+center);const pal=['rgba(150,140,255,A)','rgba(120,170,255,A)','rgba(255,200,160,A)','rgba(255,150,200,A)'];blob(cx,cy,r,pal[i%4],(.025+rand()*.04)*(.5+center*1.2))}
   for(let i=0;i<120;i++){const cx=rand()*2048;blob(cx,512+(rand()-.5)*30,20+rand()*40,'rgba(2,3,10,A)',.35)}
   blob(1024,512,180,'rgba(255,220,170,A)',.25);
   for(let i=0;i<9000;i++){const yy=rand()<.55?512+(rand()+rand()+rand()-1.5)*160:rand()*1024;const b=rand();x.fillStyle=`rgba(${220+b*35|0},${220+b*30|0},255,${.35+b*.65})`;const s=b>.97?2.2:b>.85?1.4:.9;x.fillRect(rand()*2048,yy,s,s)}
-  const skyTex=ctex(cv);const sky=new THREE.Mesh(new THREE.SphereGeometry(3500,48,24),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,depthWrite:false}));sky.rotation.y=Math.PI;spaceScene.add(sky);
+  const skyTex=ctex(cv);skyTex.generateMipmaps=true;const sky=new THREE.Mesh(new THREE.SphereGeometry(3500,48,24),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,depthWrite:false}));sky.rotation.y=Math.PI;spaceScene.add(sky);
   spaceScene.add(new THREE.AmbientLight(0x7380aa,.34),new THREE.HemisphereLight(0x8090c0,0x201828,.12));const pl=new THREE.PointLight(0xfff1d6,1.35,0,0);spaceScene.add(pl);
   // sun
   await wait(0);const sun=G(starMesh(6,'#ff5200','#ffe27a'));
@@ -1640,6 +1640,8 @@ function updateEarth(dt,t){
   WATER_T.value=t;WAVE_A.value=.035*smooth(.75,.22,ride?.3:EC.alt);const hgt=camera.position.length()-1,day=smooth(.24,.04,hgt);earthScene.background.copy(BG_SPACE).lerp(BG_SKY,day);earthScene.fog.color.copy(earthScene.background).convertSRGBToLinear();earthScene.fog.density=day*.8;starPts.material.opacity=1-day;
 }
 const clock=new THREE.Clock();let T=0,rafId=0,frameSample=0,frameSeconds=0,adjustCooldown=0;
+const perfStats={fps:0,dpr:renderDPR,frames:0,drawCalls:0,triangles:0};
+window.branchAdventurePerf=Object.freeze({snapshot:()=>({...perfStats,mode,quality})});
 function loop(){
   if(document.hidden){rafId=0;return}
   rafId=requestAnimationFrame(loop);
@@ -1649,13 +1651,14 @@ function loop(){
     frameSeconds+=rawDT;frameSample++;
     adjustCooldown=Math.max(0,adjustCooldown-rawDT);
     if(frameSample>=90&&frameSeconds>=1.5){
-      const fps=frameSample/frameSeconds;
+      const fps=frameSample/frameSeconds;perfStats.fps=Math.round(fps);
       if(!adjustCooldown&&fps<47&&renderDPR>dprFloor){applyRenderDPR(renderDPR-0.15);adjustCooldown=3}
       else if(!adjustCooldown&&fps>58&&renderDPR<dprCeiling){applyRenderDPR(renderDPR+0.05);adjustCooldown=5}
       frameSeconds=0;frameSample=0;
     }
   }
   if(mode==='earth'){updateEarth(dt,T);renderer.render(earthScene,camera)}else{spaceUpdate(dt,T);spaceCamUpdate(dt);if(composer)composer.render(dt);else renderer.render(spaceScene,scam)}
+  perfStats.dpr=renderDPR;perfStats.frames++;perfStats.drawCalls=renderer.info.render.calls;perfStats.triangles=renderer.info.render.triangles;
   updateLabels();drawWarp(dt)}
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden){if(rafId)cancelAnimationFrame(rafId);rafId=0;clock.stop()}
@@ -1668,7 +1671,11 @@ async function boot(){
   buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
   buildPlaces();buildIslands();buildMountains();buildTrees();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),700);
-  spacePromise=buildSpace().then(()=>{buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;if(location.hash==='#space')enterSpace()})}
+  // Allow the first interactive Earth frame before expensive space-scene construction.
+  spacePromise=new Promise((resolve,reject)=>setTimeout(()=>{
+    try{resolve(buildSpace())}catch(error){reject(error)}
+  },0)).then(()=>{buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;if(location.hash==='#space')enterSpace()})
+    .catch(error=>{console.error('Space initialization failed',error);toast('Space','Space content could not load')});}
 boot().catch(err=>{console.error(err);$('loadMsg').textContent='Something went wrong loading the planet: '+err.message});
 })();
 </script>
