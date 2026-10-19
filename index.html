@@ -415,10 +415,15 @@ function landAt(lat,lon){return samp(MS,lat,lon)}
 /* ================= RENDERER ================= */
 const canvas=$('gl');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,HQ?2:1.25));
+// Adaptive rendering: preserve the HQ/FAST art budgets while scaling costly GPU pixels.
+const nativeDPR=Math.max(1,window.devicePixelRatio||1);
+const dprCeiling=Math.min(nativeDPR,HQ?2:1.25);
+const dprFloor=Math.min(dprCeiling,HQ?0.85:0.7);
+let renderDPR=Math.min(dprCeiling,HQ?1.5:1);
+renderer.setPixelRatio(renderDPR);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.NoToneMapping;
-const MAXANISO=renderer.capabilities.getMaxAnisotropy();
+const MAXANISO=Math.min(renderer.capabilities.getMaxAnisotropy(),HQ?8:4);
 function ctex(cv){const t=new THREE.CanvasTexture(cv);t.encoding=THREE.sRGBEncoding;t.anisotropy=MAXANISO;return t}
 function makeEnv(){const s=new THREE.Scene(),g=new THREE.SphereGeometry(10,32,16),p=g.attributes.position,col=[],top=LC('#b9d4f2'),mid=LC('#7d90a8'),bot=LC('#3c4452'),t=new THREE.Color();
   for(let i=0;i<p.count;i++){const y=p.getY(i)/10;t.copy(mid).lerp(y>0?top:bot,Math.abs(y));col.push(t.r,t.g,t.b)}g.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
@@ -1594,8 +1599,16 @@ function drawWarp(dt){wc.style.opacity=warpAmt.toFixed(2);if(warpAmt<.02)return;
   streaks.forEach(s=>{s.r+=dt*s.s*(1+warpAmt*3);if(s.r>1)s.r=.05;const r0=s.r*R,r1=r0+(20+warpAmt*160)*s.r;wx.strokeStyle=`rgba(200,220,255,${(s.r*.8).toFixed(2)})`;wx.lineWidth=1+s.r*2;wx.beginPath();wx.moveTo(cx+Math.cos(s.a)*r0,cy+Math.sin(s.a)*r0);wx.lineTo(cx+Math.cos(s.a)*r1,cy+Math.sin(s.a)*r1);wx.stroke()})}
 
 /* ================= MAIN LOOP ================= */
-function setupComposer(){if(!HQ||!THREE.EffectComposer||!THREE.UnrealBloomPass)return;try{composer=new THREE.EffectComposer(renderer);composer.addPass(new THREE.RenderPass(spaceScene,scam));composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.8,.5,.93));composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader))}catch(e){console.warn(e);composer=null}}
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);if(composer)composer.setSize(w,h);camera.aspect=scam.aspect=w/h;camera.updateProjectionMatrix();scam.updateProjectionMatrix()}
+function setupComposer(){if(!HQ||!THREE.EffectComposer||!THREE.UnrealBloomPass)return;try{composer=new THREE.EffectComposer(renderer);if(composer.setPixelRatio)composer.setPixelRatio(renderDPR);composer.addPass(new THREE.RenderPass(spaceScene,scam));composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.8,.5,.93));composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader))}catch(e){console.warn(e);composer=null}}
+function applyRenderDPR(next){
+  next=Math.max(dprFloor,Math.min(dprCeiling,Math.round(next*20)/20));
+  if(Math.abs(next-renderDPR)<0.025)return;
+  renderDPR=next;renderer.setPixelRatio(renderDPR);
+  if(composer&&composer.setPixelRatio)composer.setPixelRatio(renderDPR);
+  resize();
+}
+function resize(){const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);renderer.setSize(w,h,false);if(composer)composer.setSize(w,h);camera.aspect=scam.aspect=w/h;camera.updateProjectionMatrix();scam.updateProjectionMatrix()}
+
 addEventListener('resize',resize);
 const shadowCenter=new V3(),Ld=new V3();
 function updateEarth(dt,t){
@@ -1613,10 +1626,28 @@ function updateEarth(dt,t){
   cloudMat.opacity=.9*smooth(.14,.5,ride?.5:EC.alt);
   WATER_T.value=t;WAVE_A.value=.035*smooth(.75,.22,ride?.3:EC.alt);const hgt=camera.position.length()-1,day=smooth(.24,.04,hgt);earthScene.background.copy(BG_SPACE).lerp(BG_SKY,day);earthScene.fog.color.copy(earthScene.background).convertSRGBToLinear();earthScene.fog.density=day*.8;starPts.material.opacity=1-day;
 }
-const clock=new THREE.Clock();let T=0;
-function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05);T+=dt;
+const clock=new THREE.Clock();let T=0,rafId=0,frameSample=0,frameSeconds=0,adjustCooldown=0;
+function loop(){
+  if(document.hidden){rafId=0;return}
+  rafId=requestAnimationFrame(loop);
+  const rawDT=clock.getDelta(),dt=Math.min(rawDT,.05);T+=dt;
+  // Adapt slowly to sustained load; never alter geometry, simulation speed or user quality preference.
+  if(rawDT>0&&rawDT<0.25){
+    frameSeconds+=rawDT;frameSample++;
+    adjustCooldown=Math.max(0,adjustCooldown-rawDT);
+    if(frameSample>=90&&frameSeconds>=1.5){
+      const fps=frameSample/frameSeconds;
+      if(!adjustCooldown&&fps<47&&renderDPR>dprFloor){applyRenderDPR(renderDPR-0.15);adjustCooldown=3}
+      else if(!adjustCooldown&&fps>58&&renderDPR<dprCeiling){applyRenderDPR(renderDPR+0.05);adjustCooldown=5}
+      frameSeconds=0;frameSample=0;
+    }
+  }
   if(mode==='earth'){updateEarth(dt,T);renderer.render(earthScene,camera)}else{spaceUpdate(dt,T);spaceCamUpdate(dt);if(composer)composer.render(dt);else renderer.render(spaceScene,scam)}
   updateLabels();drawWarp(dt)}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(rafId)cancelAnimationFrame(rafId);rafId=0;clock.stop()}
+  else if(!rafId){clock.start();frameSample=0;frameSeconds=0;rafId=requestAnimationFrame(loop)}
+});
 
 /* ================= BOOT ================= */
 async function boot(){
