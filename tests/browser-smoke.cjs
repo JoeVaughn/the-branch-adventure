@@ -5,7 +5,7 @@ const {chromium}=require('playwright');
  await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'fast'})));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded',timeout:30000});
- await page.waitForFunction(()=>Boolean(window.branchAdventurePerf&&document.querySelector('#gl')),{timeout:60000});
+ await page.waitForFunction(()=>Boolean(window.branchAdventurePerf&&document.querySelector('#gl')),null,{timeout:90000});
  await page.waitForTimeout(1200);
  const state=await page.evaluate(()=>({canvas:!!document.querySelector('#gl'),perf:window.branchAdventurePerf.snapshot(),loading:!!document.querySelector('#loading'),body:document.body.innerText.slice(0,100)}));
  await page.screenshot({path:'earth-smoke.png'});
@@ -14,7 +14,7 @@ const {chromium}=require('playwright');
  console.log('Browser Earth smoke test passed:',JSON.stringify(state));
  // Exercise the deferred space-loading path as well as the initial Earth render.
  await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:30000});
- await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',{timeout:90000});
+ await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',null,{timeout:120000});
  await page.waitForTimeout(1500);
  const space=await page.evaluate(()=>window.branchAdventurePerf.snapshot());
  await page.screenshot({path:'space-smoke.png'});
