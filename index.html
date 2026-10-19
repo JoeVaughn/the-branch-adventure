@@ -1672,9 +1672,9 @@ async function boot(){
   buildPlaces();buildIslands();buildMountains();buildTrees();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),700);
   // Allow the first interactive Earth frame before expensive space-scene construction.
-  spacePromise=new Promise((resolve,reject)=>setTimeout(()=>{
+  spacePromise=new Promise((resolve,reject)=>requestAnimationFrame(()=>setTimeout(()=>{
     try{resolve(buildSpace())}catch(error){reject(error)}
-  },0)).then(()=>{buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;if(location.hash==='#space')enterSpace()})
+  },0))).then(()=>{buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;if(location.hash==='#space')enterSpace()})
     .catch(error=>{console.error('Space initialization failed',error);toast('Space','Space content could not load')});}
 boot().catch(err=>{console.error(err);$('loadMsg').textContent='Something went wrong loading the planet: '+err.message});
 })();
