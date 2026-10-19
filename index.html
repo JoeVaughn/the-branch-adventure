@@ -909,6 +909,9 @@ const ISLANDS=[
 ['ambergris','Ambergris Caye',-87.95,17.95,.04,.3,10,'Belize','San Pedro','The largest island in Belize, right next to the Belize Barrier Reef.']
 ];
 // [id, name, country, lat, lon, metro population (millions), facts, {lm: wonder at its center, isle: on an island}]
+
+// Educational examples, not live trade rankings. For current figures see World Bank WITS.
+const COUNTRY_ECONOMY={"United States":{"exports":"aircraft, machinery, refined petroleum","resources":"petroleum, timber, fertile farmland"},"Canada":{"exports":"crude petroleum, cars, lumber","resources":"forests, petroleum, minerals"},"Mexico":{"exports":"vehicles, electronics, machinery","resources":"silver, copper, agricultural land"},"Cuba":{"exports":"nickel, tobacco, sugar","resources":"nickel deposits, fertile farmland"},"Brazil":{"exports":"soybeans, iron ore, crude petroleum","resources":"iron ore, forests, farmland"},"Argentina":{"exports":"soybean products, corn, wheat","resources":"Pampas farmland, lithium"},"Chile":{"exports":"copper, lithium compounds, fruit","resources":"copper, lithium, fisheries"},"Peru":{"exports":"copper, gold, zinc","resources":"Andean mineral deposits, fisheries"},"Colombia":{"exports":"petroleum, coal, coffee","resources":"coal, petroleum, coffee-growing land"},"Venezuela":{"exports":"crude petroleum, petroleum products","resources":"oil and natural gas"},"Bolivia":{"exports":"natural gas, zinc, silver","resources":"natural gas, tin, lithium resources"},"United Kingdom":{"exports":"machinery, cars, pharmaceuticals","resources":"offshore energy, wind"},"Ireland":{"exports":"pharmaceuticals, medical devices","resources":"farmland, wind"},"Iceland":{"exports":"aluminum, fish","resources":"geothermal energy, fisheries"},"France":{"exports":"aircraft, pharmaceuticals, wine","resources":"fertile farmland, hydropower"},"Spain":{"exports":"cars, machinery, olive oil","resources":"olive groves, wind and sunshine"},"Portugal":{"exports":"vehicles, paper products, textiles","resources":"cork forests, fisheries"},"Germany":{"exports":"cars, machinery, chemicals","resources":"industrial manufacturing, potash"},"Italy":{"exports":"machinery, pharmaceuticals, fashion goods","resources":"marble, agricultural land"},"Netherlands":{"exports":"machinery, chemicals, flowers","resources":"fertile farmland, natural gas"},"Switzerland":{"exports":"pharmaceuticals, watches, machinery","resources":"hydropower"},"Greece":{"exports":"refined petroleum, olive oil, aluminum","resources":"olive groves, bauxite"},"Norway":{"exports":"petroleum, natural gas, fish","resources":"offshore oil and gas, hydropower"},"Sweden":{"exports":"machinery, vehicles, iron and steel","resources":"forests, iron ore, hydropower"},"Finland":{"exports":"paper, machinery, metals","resources":"forests, nickel, hydropower"},"Poland":{"exports":"machinery, furniture, vehicles","resources":"coal, copper, farmland"},"Ukraine":{"exports":"grain, sunflower oil, iron ore","resources":"rich agricultural soil, iron ore"},"Russia":{"exports":"crude oil, natural gas, metals","resources":"oil, natural gas, forests"},"Türkiye":{"exports":"vehicles, textiles, machinery","resources":"boron minerals, farmland"},"Egypt":{"exports":"fertilizers, petroleum products, textiles","resources":"natural gas, Nile farmland"},"Morocco":{"exports":"cars, fertilizers, phosphate products","resources":"phosphate rock, fisheries"},"Algeria":{"exports":"natural gas, crude petroleum","resources":"natural gas, petroleum"},"Nigeria":{"exports":"crude petroleum, natural gas products","resources":"oil, natural gas, cocoa-growing land"},"Ghana":{"exports":"gold, cocoa, petroleum","resources":"gold, cocoa-growing land"},"Ethiopia":{"exports":"coffee, oilseeds, cut flowers","resources":"highland farmland, hydropower"},"Kenya":{"exports":"tea, cut flowers, coffee","resources":"tea-growing highlands, geothermal power"},"Tanzania":{"exports":"gold, coffee, cashews","resources":"gold, agricultural land"},"DR Congo":{"exports":"copper, cobalt, mining products","resources":"cobalt, copper, forests"},"South Africa":{"exports":"gold, platinum, vehicles","resources":"platinum, gold, coal"},"Madagascar":{"exports":"vanilla, nickel, cloves","resources":"nickel, vanilla-growing land"},"Saudi Arabia":{"exports":"crude petroleum, refined petroleum","resources":"oil, natural gas"},"United Arab Emirates":{"exports":"petroleum products, gold, aluminum","resources":"oil, natural gas, sunshine"},"Iraq":{"exports":"crude petroleum","resources":"oil, natural gas"},"Iran":{"exports":"petroleum products, metals, chemicals","resources":"oil, natural gas, copper"},"Pakistan":{"exports":"textiles, rice, sports goods","resources":"cotton-growing land, salt"},"India":{"exports":"refined petroleum, pharmaceuticals, engineering goods","resources":"iron ore, farmland, sunshine"},"Nepal":{"exports":"carpets, textiles, tea","resources":"hydropower, forests"},"China":{"exports":"electronics, machinery, vehicles","resources":"rare earth minerals, coal"},"Mongolia":{"exports":"coal, copper, gold","resources":"coal, copper, grasslands"},"Kazakhstan":{"exports":"crude petroleum, uranium, copper","resources":"oil, uranium, copper"},"Japan":{"exports":"cars, machinery, electronics","resources":"fisheries, forests"},"South Korea":{"exports":"semiconductors, vehicles, ships","resources":"industrial manufacturing, fisheries"},"Thailand":{"exports":"electronics, vehicles, rubber","resources":"rubber-growing land, rice fields"},"Vietnam":{"exports":"electronics, textiles, footwear","resources":"rice-growing land, coffee-growing land"},"Cambodia":{"exports":"garments, footwear, bicycles","resources":"rubber-growing land, farmland"},"Malaysia":{"exports":"electronics, palm oil, liquefied natural gas","resources":"natural gas, palm-growing land"},"Indonesia":{"exports":"coal, palm oil, nickel","resources":"nickel, coal, tropical forests"},"Philippines":{"exports":"electronics, semiconductor components, agricultural products","resources":"nickel, coconut-growing land"},"Australia":{"exports":"iron ore, coal, liquefied natural gas","resources":"iron ore, coal, sunshine"},"New Zealand":{"exports":"dairy products, meat, wood","resources":"pastureland, forests, geothermal power"},"Haiti":{"exports":"apparel, essential oils, agricultural products","resources":"agricultural land, sunlight"},"Dominican Republic":{"exports":"medical devices, gold, cigars","resources":"gold, fertile farmland"},"Greenland":{"exports":"fish and seafood","resources":"fisheries, ice and freshwater"},"Antarctica":{"exports":"no commercial national exports","resources":"ice sheets, wildlife habitats"}};
 const CITIES=[
 ['nyc','New York City','USA',40.71,-74.0,18.9,['About 8 million people live in the city itself.','More than 800 languages are spoken here.'],{lm:'liberty'}],
 ['la','Los Angeles','USA',34.05,-118.24,12.5,['Home of Hollywood and the movie industry.','About 3.8 million people live in the city itself.']],
@@ -955,6 +958,40 @@ const CITIES=[
 ['tokyo','Tokyo','Japan',36.1,140.2,37.1,['The biggest metro area on Earth, with about 37 million people.','Its train stations are some of the busiest in the world.']],
 ['sydney','Sydney','Australia',-33.87,151.21,5.3,['Australia’s biggest city.','Its Harbour Bridge is nicknamed “the Coathanger.”'],{lm:'opera'}]
 ];
+
+// Additional global learning destinations; population figures are illustrative metro-scale map tiers, not live census estimates.
+CITIES.push(
+  ["vancouver","Vancouver","Canada",49.28,-123.12,2.6,["Pacific port surrounded by mountains."]],
+  ["montreal","Montréal","Canada",45.5,-73.57,4.3,["A major French-speaking city on the Saint Lawrence River."]],
+  ["miami","Miami","USA",25.76,-80.19,6,["A major gateway between North America and the Caribbean."]],
+  ["bogota","Bogotá","Colombia",4.71,-74.07,8,["Colombia's high-altitude capital in the Andes."]],
+  ["santiago","Santiago","Chile",-33.45,-70.67,7,["Chile's capital sits beneath the Andes."]],
+  ["quito","Quito","Ecuador",-0.18,-78.47,2.8,["High in the Andes, near the equator."]],
+  ["capetown","Cape Town","South Africa",-33.92,18.42,4.8,["A coastal city beside Table Mountain."]],
+  ["addisababa","Addis Ababa","Ethiopia",9.03,38.74,5,["Home to the headquarters of the African Union."]],
+  ["accra","Accra","Ghana",5.56,-0.2,2.5,["Ghana's Atlantic-facing capital."]],
+  ["kinshasa","Kinshasa","DR Congo",-4.32,15.32,15,["A major city on the Congo River."]],
+  ["casablanca","Casablanca","Morocco",33.57,-7.59,3.7,["One of North Africa's major Atlantic ports."]],
+  ["algiers","Algiers","Algeria",36.75,3.06,3.5,["Algeria's Mediterranean capital."]],
+  ["amsterdam","Amsterdam","Netherlands",52.37,4.9,2.5,["Historic canals and a long maritime trading tradition."]],
+  ["stockholm","Stockholm","Sweden",59.33,18.07,2.4,["Built across islands near the Baltic Sea."]],
+  ["oslo","Oslo","Norway",59.91,10.75,1.1,["Norway's capital sits beside Oslofjord."]],
+  ["warsaw","Warsaw","Poland",52.23,21.01,1.9,["Its historic Old Town was rebuilt after World War II."]],
+  ["kyiv","Kyiv","Ukraine",50.45,30.52,3,["Ukraine's capital on the Dnipro River."]],
+  ["riyadh","Riyadh","Saudi Arabia",24.71,46.68,7,["Saudi Arabia's capital on the Arabian Peninsula."]],
+  ["delhi","Delhi","India",28.61,77.21,32,["The Indian capital region has layers of historical architecture."]],
+  ["kolkata","Kolkata","India",22.57,88.36,15,["A major city beside the Hooghly River."]],
+  ["manila","Manila","Philippines",14.6,120.98,14,["A major port on Manila Bay."]],
+  ["hanoi","Hanoi","Vietnam",21.03,105.85,8,["Vietnam's capital is known for its lakes and old quarter."]],
+  ["hochiminh","Ho Chi Minh City","Vietnam",10.82,106.63,9,["Vietnam's large southern trading center."]],
+  ["taipei","Taipei","Taiwan",25.03,121.56,7,["Known for its night markets and technology industry."]],
+  ["osaka","Osaka","Japan",34.69,135.5,19,["A historic Japanese merchant city."]],
+  ["auckland","Auckland","New Zealand",-36.85,174.76,1.7,["A harbor city on New Zealand's North Island."]],
+  ["melbourne","Melbourne","Australia",-37.81,144.96,5,["Known for its arts and sports culture."]],
+  ["perth","Perth","Australia",-31.95,115.86,2.2,["Western Australia's capital on the Swan River."]],
+  ["suva","Suva","Fiji",-18.14,178.44,0.3,["Fiji's capital on Viti Levu island."]],
+  ["portmoresby","Port Moresby","Papua New Guinea",-9.47,147.16,0.4,["A coastal capital on the island of New Guinea."]]
+);
 const circ=(la,lo,r,n=10)=>Array.from({length:n},(_,i)=>{const a=i/n*TAU;return[la+Math.sin(a)*r,lo+Math.cos(a)*r/Math.cos(la*DEG)]});
 const VEHICLES=[
 ['plane1','Boeing 747-8','New York ⇄ London',[[40.6,-73.8],[51.5,-.5]],'b747','#2a5fbf',.0016,['The “Queen of the Skies” is about 76 m long, longer than a blue whale!','Its famous hump holds an upper deck.','It cruises at about 920 km/h.']],
@@ -964,14 +1001,14 @@ const VEHICLES=[
 ['plane5','Boeing 747 Freighter','Singapore ⇄ London',[[1.36,103.99],[51.47,-.45]],'b747f','#8a94a6',.0012,['Its nose swings open so long cargo can slide straight in.','It carries packages, medicine and fresh food around the world.']],
 ['plane6','Airbus A320','London ⇄ Rome',[[51.47,-.45],[41.8,12.25]],'a320','#7a4bd6',.0022,['One of the most common airliners in the sky.','This short trip takes about 2.5 hours.']],
 ['plane7','Airbus A320','Miami ⇄ San Juan',[[25.8,-80.3],[18.44,-66.0]],'a320','#2fb3a5',.0024,['Flights link the Caribbean islands with the mainland every day.','The trip takes about 2.5 hours.']],
-['heli1','Rescue Helicopter','Swiss Alps',circ(46.5,8.2,1.4),'heli','#e0473c',.003,['Helicopters can hover in place and even fly backwards.','Mountain rescue crews use them to reach climbers in trouble.']],
-['heli2','Tour Helicopter','Grand Canyon',circ(36.3,-112.4,1.6),'heli','#2a6fd6',.003,['Tour helicopters fly visitors over the canyon.','A helicopter’s spinning blades are called rotors.']],
-['ship1','Container Ship','North Atlantic',[[40,-60],[45,-30],[35,-25],[25,-45]],'container','#1f3f7a',.0011,['The biggest container ships carry more than 24,000 containers.','Containers come in standard sizes, so cranes anywhere can lift them.']],
-['ship2','Cruise Ship','Caribbean islands tour',[[25.6,-79.6],[25.9,-76.0],[23.8,-73.6],[21.0,-70.5],[19.0,-66.4],[18.6,-65.0],[18.0,-63.4],[16.8,-62.8],[15.8,-64.5],[16.8,-70],[17.3,-75],[19.3,-79],[21.6,-85.5],[24.2,-83.5],[25,-80.3]],'cruise','#2a6fd6',.0013,['Big cruise ships carry over 6,000 passengers.','This one hops between Caribbean islands.','Some cruise ships have water slides, theaters and even ice rinks!']],
-['ship3','Oil Tanker','Indian Ocean',[[-5,65],[-15,80],[0,90],[8,70]],'tanker','#2b3440',.001,['A supertanker can carry more than 2 million barrels of oil.','It can take several kilometers to stop!']],
-['ship4','Sailing Yacht','Mediterranean Sea',[[36,17],[34.2,25],[34.5,32],[33.6,21]],'yacht','#2a6fd6',.0013,['Sailboats use only the wind to move.','People have sailed the Mediterranean for over 5,000 years.']],
-['ship5','Container Ship','Pacific Ocean',[[30,-150],[25,-172],[12,172],[18,-140]],'container','#2f7a4f',.001,['The Pacific is the biggest ocean, larger than all the land on Earth combined.','A crossing takes about two weeks.']],
-['ship6','Sailing Yacht','Caribbean Sea',[[13.5,-64],[15.2,-66.5],[12.9,-68],[12.4,-65]],'yacht','#e0473c',.0016,['The Caribbean’s steady trade winds make it great for sailing.','Sailors zigzag back and forth to sail into the wind.']]
+['heli1','Rescue Helicopter','Geneva ⇄ Chamonix ⇄ Geneva',[[46.20,6.15],[45.92,6.87]],'heli','#e0473c',.003,['Helicopters can hover in place and even fly backwards.','Mountain rescue crews use them to reach climbers in trouble.']],
+['heli2','Tour Helicopter','Las Vegas ⇄ Grand Canyon ⇄ Las Vegas',[[36.08,-115.15],[36.05,-112.13]],'heli','#2a6fd6',.003,['Tour helicopters fly visitors over the canyon.','A helicopter’s spinning blades are called rotors.']],
+['ship1','Container Ship','New York ⇄ Rotterdam',[[40.67,-74.04],[44.0,-58.0],[49.0,-30.0],[51.92,4.48]],'container','#1f3f7a',.0011,['The biggest container ships carry more than 24,000 containers.','Containers come in standard sizes, so cranes anywhere can lift them.']],
+['ship2','Cruise Ship','Miami → Nassau → San Juan → Santo Domingo → Miami',[[25.77,-80.18],[25.08,-77.34],[18.46,-66.11],[18.43,-69.95]],'cruise','#2a6fd6',.0013,['Big cruise ships carry over 6,000 passengers.','This one hops between Caribbean islands.','Some cruise ships have water slides, theaters and even ice rinks!']],
+['ship3','Oil Tanker','Dubai ⇄ Mumbai',[[25.20,55.10],[24.2,58.5],[19.0,72.7]],'tanker','#2b3440',.001,['A supertanker can carry more than 2 million barrels of oil.','It can take several kilometers to stop!']],
+['ship4','Sailing Yacht','Athens → Santorini → Heraklion → Athens',[[37.94,23.63],[36.46,25.38],[35.33,25.14]],'yacht','#2a6fd6',.0013,['Sailboats use only the wind to move.','People have sailed the Mediterranean for over 5,000 years.']],
+['ship5','Container Ship','Shanghai ⇄ Los Angeles',[[31.23,121.6],[35,145],[39,177],[36,-150],[33.73,-118.26]],'container','#2f7a4f',.001,['The Pacific is the biggest ocean, larger than all the land on Earth combined.','A crossing takes about two weeks.']],
+['ship6','Sailing Yacht','Bridgetown → Kingstown → St. George’s → Bridgetown',[[13.10,-59.61],[13.15,-61.22],[12.05,-61.75]],'yacht','#e0473c',.0016,['The Caribbean’s steady trade winds make it great for sailing.','Sailors zigzag back and forth to sail into the wind.']]
 ];
 const VSCALE={b747:.046,b747f:.046,b787:.042,a380:.05,a320:.034,heli:.026,container:.048,cruise:.046,tanker:.048,yacht:.022};
 const VALT={b747:1.06,b747f:1.06,b787:1.06,a380:1.062,a320:1.05,heli:1.022,container:1.0003,cruise:1.0003,tanker:1.0003,yacht:1.0003};
@@ -1069,8 +1106,8 @@ function buildPlaces(){
     else if(opt.float){placeOn(obj,lat,lon,s,{r:.998});const y0=obj.position.clone();animators.push((dt,t)=>{obj.position.copy(y0).multiplyScalar(1+Math.sin(t*1.2)*.0015);obj.rotateY(dt*.15)})}
     else{placeOn(obj,lat,lon,s);const p0=obj.position.clone(),n=p0.clone().normalize(),ph=rand()*TAU;animators.push((dt,t)=>obj.position.copy(p0).addScaledVector(n,Math.max(0,Math.sin(t*2.2+ph))*.0012))}
     reg(item)});
-  buildCities();
-  VEHICLES.forEach(([id,name,route,path,kind,col,speed,facts])=>{const obj=vehicleModel(kind,col);world.add(obj);obj.scale.setScalar(VSCALE[kind]);const item={id,cat:'vehicle',name,place:route,facts,obj,mode:'earth',ride:true};makeMover(item,path,speed,VALT[kind],kind);reg(item);if(obj.userData.rotor){const ro=obj.userData.rotor,tr=obj.userData.tail;animators.push(dt=>{ro.rotation.y+=dt*28;tr.rotation.x+=dt*40})}});
+  buildCities(CITIES.slice(0,44));
+  VEHICLES.forEach(([id,name,route,path,kind,col,speed,facts])=>{const obj=vehicleModel(kind,col);world.add(obj);obj.scale.setScalar(VSCALE[kind]);const item={id,cat:'vehicle',name,place:route,facts:[`Illustrative service route: ${route}. Vehicles follow geographic waypoints; this is not live transport tracking.`,...facts],stats:[['Route',route],['Mode',kind==='heli'?'Helicopter':kind.startsWith('b')||kind.startsWith('a')?'Air travel':'Sea travel']],obj,mode:'earth',ride:true};makeMover(item,path,speed,VALT[kind],kind);reg(item);if(obj.userData.rotor){const ro=obj.userData.rotor,tr=obj.userData.tail;animators.push(dt=>{ro.rotation.y+=dt*28;tr.rotation.x+=dt*40})}});
   // ISS
   const iss=G(B(.9,.03,.03,'#cfd6de',0,0,0),R(C(.045,.045,.36,'#eef1f4',0,0,0,8),Math.PI/2,0,0),R(C(.04,.04,.2,'#e2e6ea',.12,0,0,8),0,0,Math.PI/2),B(.06,.12,.004,'#f4f6f8',-.1,.1,0));
   for(const x of[-.42,-.3,.3,.42])for(const y of[-1,1])iss.add(B(.1,.004,.26,'#2c4f8a',x,0,y*.16));
@@ -1090,7 +1127,8 @@ function buildPlaces(){
 function orient(obj,up,fwd){const u=up.clone().normalize(),z=fwd.clone().sub(u.clone().multiplyScalar(fwd.dot(u))).normalize(),x=new V3().crossVectors(u,z);obj.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,u,z))}
 function slerpV(a,b,t){const ang=a.angleTo(b);if(ang<1e-6)return a.clone();const s=Math.sin(ang);return a.clone().multiplyScalar(Math.sin((1-t)*ang)/s).add(b.clone().multiplyScalar(Math.sin(t*ang)/s))}
 function makeMover(item,wps,speed,r,kind){
-  const pts=[];for(let i=0;i<wps.length;i++){const a=ll2v(...wps[i]),b=ll2v(...wps[(i+1)%wps.length]);const st=Math.max(2,Math.ceil(a.angleTo(b)/.02));for(let s=0;s<st;s++)pts.push(slerpV(a,b,s/st))}
+  const stops=wps.length>2?[...wps,...wps.slice(1,-1).reverse()]:wps;
+  const pts=[];for(let i=0;i<stops.length;i++){const a=ll2v(...stops[i]),b=ll2v(...stops[(i+1)%stops.length]);const st=Math.max(2,Math.ceil(a.angleTo(b)/.02));for(let s=0;s<st;s++)pts.push(slerpV(a,b,s/st))}
   const cum=[0];for(let i=1;i<=pts.length;i++)cum.push(cum[i-1]+pts[i-1].angleTo(pts[i%pts.length]));const total=cum[pts.length];
   let d=rand()*total;const obj=item.obj;const P=new V3(),F=new V3();
   item.update=(dt,t)=>{d=(d+dt*speed*60)%total;let lo=0,hi=pts.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(cum[m]<=d)lo=m;else hi=m-1}
@@ -1098,7 +1136,7 @@ function makeMover(item,wps,speed,r,kind){
     let rr=r;
     if(kind==='swim')rr=r+Math.sin(t*.8+lo)*.002;
     obj.position.copy(P).multiplyScalar(rr);orient(obj,P,F);item.fwd=F.clone();item.up=P.clone()};
-  item.update(0,0);movers.push(item)}
+  item.routePoints=pts;item.routeRadius=r;item.update(0,0);movers.push(item)}
 /* ================= GEOMETRY HELPERS ================= */
 function mergeParts(parts,useUV){let n=0;const gs=parts.map(([g,c,us,caps])=>[g.index?g.toNonIndexed():g,c,us,caps]);gs.forEach(([g])=>n+=g.attributes.position.count);
   const pos=new Float32Array(n*3),col=new Float32Array(n*3),uv=useUV?new Float32Array(n*2):null,cc=new THREE.Color(),l=new THREE.Color();let o=0;
@@ -1155,9 +1193,9 @@ const WIN=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;
 const CITY_WIN=new THREE.MeshStandardMaterial({vertexColors:true,map:WIN,roughness:.35,metalness:.22}),CITY_PLAIN=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75});
 const cityBanners=[];
 const popStr=p=>p>=10?Math.round(p)+'M':p>=1?p.toFixed(1)+'M':Math.round(p*1000)+'K';
-function buildCities(){const lmAvoid=[...ITEMS.values()].filter(i=>i.cat==='landmark').map(i=>({id:i.id,p:ll2v(i.lat,i.lon),r2:Math.pow(i.footR+.002,2)}));
+function buildCities(cityRows=CITIES){const lmAvoid=[...ITEMS.values()].filter(i=>i.cat==='landmark').map(i=>({id:i.id,p:ll2v(i.lat,i.lon),r2:Math.pow(i.footR+.002,2)}));
   const GLASS=['#8fb3d9','#a9c6de','#7d9cc0','#c9d6e2','#9bb8c9','#6f8fb3','#b7c4d1'],MID=['#e9e4d8','#d6dde6','#c8b79a','#e0c7b4','#b9c7d6','#efe2c8'],WALL=['#f1e3c6','#e8d2b0','#f4efe6','#dcc6a0','#cfd8dc','#f0d9c4'],ROOF=['#c2553c','#a8432f','#8a5a44','#5f6b7a','#b8743a','#9b4a3a'];
-  CITIES.forEach(([id,name,country,lat,lon,pop,facts,opt={}])=>{
+  cityRows.forEach(([id,name,country,lat,lon,pop,facts,opt={}])=>{
     const lm=opt.lm?ITEMS.get(opt.lm):null,cLat=lm?lm.lat:lat,cLon=lm?lm.lon:lon,isle=!!opt.isle,Rn=mulberry(id.split('').reduce((s,ch)=>(s*31+ch.charCodeAt(0))|0,7));
     const tier=pop>=15?3:pop>=5?2:pop>=1.5?1:0,sc=isle?.016:.03,inner=lm?lm.footR/sc+.08:0,outer=lm?inner+.5+tier*.12:(isle?.62:.62+tier*.16),base=isle?ISLE_TOP:1.005;
     const C0=ll2v(cLat,cLon),NO=north(cLat*DEG,cLon*DEG),EA=new V3().crossVectors(NO,C0),glass=[],plain=[],taken=[];
@@ -1254,7 +1292,7 @@ function buildTrees(){
     if(pine){pines.setMatrixAt(np,M);c.setHSL(.36+rand()*.04,.42,.28+rand()*.08);pines.setColorAt(np++,lin(c))}else{rounds.setMatrixAt(nr,M);c.setHSL(.27+rand()*.08,.5,.36+rand()*.12);rounds.setColorAt(nr++,lin(c))}}
   trunks.count=nt;pines.count=np;rounds.count=nr;[pines,rounds].forEach(m=>{if(m.instanceColor)m.instanceColor.needsUpdate=true});world.add(trunks,pines,rounds);
   // countries
-  COUNTRIES.forEach(([name,flag,lat,lon,r,cap,hello,fact])=>{const id='c-'+name.toLowerCase().replace(/[^a-z]+/g,'-');reg({id,cat:'country',name,flag,place:'Country',lat,lon,r,stats:[['Capital',cap],['Say hello',hello]],facts:[fact],mode:'earth'})});
+  COUNTRIES.forEach(([name,flag,lat,lon,r,cap,hello,fact])=>{const id='c-'+name.toLowerCase().replace(/[^a-z]+/g,'-');reg({id,cat:'country',name,flag,place:'Country',lat,lon,r,stats:[['Capital',cap],['Say hello',hello]],facts:[fact,...(COUNTRY_ECONOMY[name]?[`Examples of goods exported: ${COUNTRY_ECONOMY[name].exports}.`,`Natural resources and productive strengths: ${COUNTRY_ECONOMY[name].resources}.`,'Export examples are educational, not a live ranking. Trade patterns can change; see World Bank WITS for updated statistics.']:[])],mode:'earth'})});
 }
 
 /* ================= SPACE ================= */
@@ -1272,7 +1310,7 @@ function planetTex(fn,W,bumpFn){const H=W/2,cv=document.createElement('canvas');
 function alphaTex(fn,W){const H=W/2,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d'),img=x.createImageData(W,H),d=img.data,v=new V3();
   for(let j=0;j<H;j++){const th=(j+.5)/H*Math.PI,st=Math.sin(th),ct=Math.cos(th);for(let i=0;i<W;i++){const ph=(i+.5)/W*TAU;v.set(-Math.cos(ph)*st,ct,Math.sin(ph)*st);const k=(j*W+i)*4;d[k]=d[k+1]=d[k+2]=255;d[k+3]=clamp(fn(v),0,1)*255}}
   x.putImageData(img,0,0);return ctex(cv)}
-function planetMesh(r,fn,o={}){const W=Math.min(o.res||1024,HQ?2048:512),tx=planetTex(fn,W,o.bump),seg=HQ?96:48;
+function planetMesh(r,fn,o={}){const W=Math.min(o.res||1024,HQ?1024:384),tx=planetTex(fn,W,o.bump),seg=HQ?96:48;
   return new THREE.Mesh(new THREE.SphereGeometry(r,seg,seg/2),new THREE.MeshStandardMaterial({map:tx.map,bumpMap:tx.bump||null,bumpScale:o.bumpScale||.03*r,roughness:o.rough??.88,metalness:0}))}
 function dotOf(fn){const c=new THREE.Color();fn(new V3(.35,.2,.91).normalize(),c);return'#'+new THREE.Color(clamp(c.r,0,1),clamp(c.g,0,1),clamp(c.b,0,1)).getHexString()}
 const STAR_SHADERS=[];
@@ -1293,12 +1331,12 @@ function ringMesh(rin,rout,cols){const cv=document.createElement('canvas');cv.wi
 function sItem(o){o.cat='space';o.mode='space';o.label=o.label??true;ITEMS.set(o.id,o);spaceItems.push(o);const pr=Math.max(o.r*1.25,o.pickR||1.4);const pk=new THREE.Mesh(new THREE.SphereGeometry(pr,10,8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false}));pk.userData.item=o;o.obj.add(pk);spacePick.push(pk);return o}
 async function buildSpace(){
   // milky way sky
-  const SK=HQ?1.5:1,cv=document.createElement('canvas');cv.width=2048*SK;cv.height=1024*SK;const x=cv.getContext('2d');x.scale(SK,SK);x.fillStyle='#02030a';x.fillRect(0,0,2048,1024);
+  const SK=1,cv=document.createElement('canvas');cv.width=2048*SK;cv.height=1024*SK;const x=cv.getContext('2d');x.scale(SK,SK);x.fillStyle='#02030a';x.fillRect(0,0,2048,1024);
   const blob=(cx,cy,r,col,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,col.replace('A',a));g.addColorStop(1,col.replace('A',0));x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2)};
-  for(let i=0;i<420;i++){const cx=rand()*2048,center=Math.exp(-Math.pow((cx-1024)/520,2));const cy=512+(rand()-.5)*(70+60*center)*1.6;const r=30+rand()*90*(.5+center);const pal=['rgba(150,140,255,A)','rgba(120,170,255,A)','rgba(255,200,160,A)','rgba(255,150,200,A)'];blob(cx,cy,r,pal[i%4],(.025+rand()*.04)*(.5+center*1.2))}
+  for(let i=0;i<(HQ?260:160);i++){const cx=rand()*2048,center=Math.exp(-Math.pow((cx-1024)/520,2));const cy=512+(rand()-.5)*(70+60*center)*1.6;const r=30+rand()*90*(.5+center);const pal=['rgba(150,140,255,A)','rgba(120,170,255,A)','rgba(255,200,160,A)','rgba(255,150,200,A)'];blob(cx,cy,r,pal[i%4],(.025+rand()*.04)*(.5+center*1.2))}
   for(let i=0;i<120;i++){const cx=rand()*2048;blob(cx,512+(rand()-.5)*30,20+rand()*40,'rgba(2,3,10,A)',.35)}
   blob(1024,512,180,'rgba(255,220,170,A)',.25);
-  for(let i=0;i<9000;i++){const yy=rand()<.55?512+(rand()+rand()+rand()-1.5)*160:rand()*1024;const b=rand();x.fillStyle=`rgba(${220+b*35|0},${220+b*30|0},255,${.35+b*.65})`;const s=b>.97?2.2:b>.85?1.4:.9;x.fillRect(rand()*2048,yy,s,s)}
+  for(let i=0;i<(HQ?6000:3500);i++){const yy=rand()<.55?512+(rand()+rand()+rand()-1.5)*160:rand()*1024;const b=rand();x.fillStyle=`rgba(${220+b*35|0},${220+b*30|0},255,${.35+b*.65})`;const s=b>.97?2.2:b>.85?1.4:.9;x.fillRect(rand()*2048,yy,s,s)}
   // The sky is viewed at many angles; mipmaps prevent distant starfield shimmer.
   const skyTex=ctex(cv);skyTex.generateMipmaps=true;skyTex.minFilter=THREE.LinearMipmapLinearFilter;const sky=new THREE.Mesh(new THREE.SphereGeometry(3500,48,24),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,depthWrite:false}));sky.rotation.y=Math.PI;spaceScene.add(sky);
   spaceScene.add(new THREE.AmbientLight(0x7380aa,.34),new THREE.HemisphereLight(0x8090c0,0x201828,.12));const pl=new THREE.PointLight(0xfff1d6,1.35,0,0);spaceScene.add(pl);
@@ -1459,19 +1497,28 @@ const SKIND={iss:'Spacecraft',voyager:'Spacecraft',sun:'Star',moon:'Moon',io:'Mo
 function catName(it){if(it.cat==='landmark')return it.natural?'Natural wonder':'Wonder';if(it.cat==='space')return SKIND[it.id]||(it.far?'Deep space':'Planet');return CATN[it.cat]}
 
 /* ================= CARD / DEX / QUESTS ================= */
-let openId=null;
-function openItem(it,discoverIt){openId=it.id;const card=$('card');card.dataset.cat=it.cat;$('cardCat').textContent=catName(it);$('cardPlace').textContent=it.place||'';
+let openId=null,shownRoute=null;
+function showVehicleRoute(it){
+  if(shownRoute){world.remove(shownRoute);shownRoute.geometry.dispose();shownRoute.material.dispose();shownRoute=null}
+  if(!it||it.cat!=='vehicle'||!it.routePoints)return;
+  const positions=it.routePoints.map(p=>p.clone().multiplyScalar(it.routeRadius+.003));
+  const geometry=new THREE.BufferGeometry().setFromPoints(positions);
+  shownRoute=new THREE.LineLoop(geometry,new THREE.LineBasicMaterial({color:0xffd966,transparent:true,opacity:.72,depthWrite:false}));
+  shownRoute.frustumCulled=false;world.add(shownRoute);
+}
+function openItem(it,discoverIt){showVehicleRoute(it);openId=it.id;const card=$('card');card.dataset.cat=it.cat;$('cardCat').textContent=catName(it);$('cardPlace').textContent=it.place||'';
   $('cardName').innerHTML=(it.flag?`<span class="flag">${it.flag}</span>`:'')+esc(it.name);
   $('cardStats').innerHTML=(it.stats||[]).map(([k,v])=>`<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
   const f=it.facts||[];$('cardFacts').innerHTML=f.map((x,i)=>i===f.length-1&&f.length>1?`<li class="dyk"><strong>Did you know?</strong>${esc(x)}</li>`:`<li>${esc(x)}</li>`).join('');
   const acts=[];if(mode==='earth'&&it.mode==='earth'){if(it.ride)acts.push(['ride','Ride along',1]);else if(it.lat!==undefined)acts.push(['zoom','Fly closer',0]);if(it.id==='ksc')acts.push(['launch','Launch to space',1])}
+  if(it.cat==='country'&&it.name!=='Antarctica')acts.push(['trade','See current trade data',0]);
   if(mode==='space'&&it.mode==='space'&&it.obj)acts.push(['visit','Visit',0]);if(mode==='earth'&&it.mode==='space'&&it.id!=='iss')acts.push(['launch','Launch to see it',1]);
   $('cardActions').innerHTML=acts.map(([a,l,p])=>`<button class="act${p?' primary':''}" data-a="${a}" type="button">${l}</button>`).join('');
   card.hidden=false;card.style.animation='none';card.offsetHeight;card.style.animation='';
   if(discoverIt)discover(it)}
 $('cardActions').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const it=ITEMS.get(openId);const a=b.dataset.a;
-  if(a==='zoom'){flyTo(it.lat,it.lon,.22)}else if(a==='ride'){startRide(it)}else if(a==='launch'){launch()}else if(a==='visit'){scFlyTo(it)}});
-$('cardClose').onclick=()=>{$('card').hidden=true;openId=null};
+  if(a==='zoom'){flyTo(it.lat,it.lon,.22)}else if(a==='ride'){startRide(it)}else if(a==='launch'){launch()}else if(a==='visit'){scFlyTo(it)}else if(a==='trade'){window.open('https://wits.worldbank.org/','_blank','noopener,noreferrer')}});
+$('cardClose').onclick=()=>{$('card').hidden=true;openId=null;showVehicleRoute(null)};
 function discover(it){if(found.has(it.id))return;found.add(it.id);save();updateCounts();
   if(it.cat==='vehicle')return;if(it.cat==='landmark'){splash(it);blip([523,659,784,1047])}else{toast('New discovery!',it.name);blip([660,880,1320])}checkQuest(it.id)}
 function splash(it){const s=$('splash');$('spEy').textContent=it.natural?'Natural wonder discovered':'Wonder discovered';$('spName').textContent=it.name;$('spMeta').textContent=[it.place,!it.natural&&YEARS[it.id]?'Built '+YEARS[it.id]:''].filter(Boolean).join(' · ');$('spQuote').textContent=it.facts[0];s.hidden=false;s.style.animation='none';void s.offsetHeight;s.style.animation='';clearTimeout(splash.t);splash.t=setTimeout(()=>s.hidden=true,4200)}
@@ -1554,8 +1601,10 @@ const rv=s=>new V3((Math.random()-.5)*s,(Math.random()-.5)*s,(Math.random()-.5)*
 const ctEl=$('count'),ctNum=$('ctNum'),ctMsg=$('ctMsg'),ctArc=$('ctArc');
 const CT_MSG={10:'All systems go',9:'Crew is strapped in',8:'Crew access arm swinging away',7:'Switching to internal power',6:'Water deluge on',5:'Flight computers in control',4:'Engine start sequence',3:'Main engines start!',2:'Engines at full power',1:'Boosters ready…'};
 function tick(k){ctNum.textContent=k;ctMsg.textContent=CT_MSG[k]||'';ctNum.classList.remove('pop');void ctNum.offsetWidth;ctNum.classList.add('pop');blip([k<=3?988:740]);if(k===3)rumble(9)}
-async function launch(){if(mode!=='earth'||launchState)return;exitRide();$('card').hidden=true;const ksc=ITEMS.get('ksc').obj;launchState={phase:'fly',ksc};ensureSpaceReady();flyTo(28.2,-80.9,.2);await wait(1700);
-  if(!spaceReady)toast('Fueling the rocket…','Almost ready for launch');await spacePromise;
+async function launch(){if(mode!=='earth'||launchState)return;exitRide();$('card').hidden=true;const ksc=ITEMS.get('ksc').obj;launchState={phase:'fly',ksc};flyTo(28.2,-80.9,.2);await wait(350);
+  // Let the camera begin its approach before heavy space generation.
+  const preparing=ensureSpaceReady();await wait(1350);
+  if(!spaceReady)toast('Fueling the rocket…','Preparing the solar system');await preparing;
   const ud=ksc.userData,r=ud.rocket;Object.assign(launchState,{phase:'count',t:0,last:11,ud,rocket:r,tau:0,v:0,r0:{p:r.position.clone(),q:r.quaternion.clone()},b0:ud.boosters.map(b=>({p:b.position.clone(),q:b.quaternion.clone()}))});
   ctEl.hidden=false;ctEl.classList.remove('lift');ctArc.style.strokeDashoffset='0';tick(10);launchState.last=10}
 function padCam(P0,n,ea,no,drift,target){const a=-.75+drift,pos=P0.clone().addScaledVector(ea,Math.cos(a)*.13).addScaledVector(no,Math.sin(a)*.13).addScaledVector(n,.028);camera.position.copy(pos);camera.up.copy(n);camera.lookAt(target)}
@@ -1678,8 +1727,26 @@ async function boot(){
     try{buildMountains();requestAnimationFrame(()=>setTimeout(()=>{try{buildTrees()}catch(e){console.warn('Trees unavailable',e)}},0))}
     catch(e){console.warn('Mountain detail unavailable',e)}
   },0));
-  // Space creation is demand-driven so exploration remains responsive on first load.
+  // Gradually populate the additional city models after first interaction.
+  let nextCity=44;
+  function addCityBatch(){
+    if(nextCity>=CITIES.length)return;
+    const stop=Math.min(CITIES.length,nextCity+2);
+    try{buildCities(CITIES.slice(nextCity,stop));nextCity=stop;updateCounts()}
+    catch(e){console.warn('Deferred city model',e);nextCity=stop}
+    if(nextCity<CITIES.length)requestAnimationFrame(()=>setTimeout(addCityBatch,0));
+  }
+  setTimeout(()=>requestAnimationFrame(addCityBatch),2000);
+  // Warm the space scene opportunistically after Earth is interactive.
+  // Defer for several seconds so first-paint performance remains the priority.
   if(location.hash==='#space')ensureSpaceReady();
+  else setTimeout(()=>{
+    if(!spacePromise && !document.hidden && !launchState){
+      const prepare=()=>ensureSpaceReady().catch(e=>console.warn('Space prewarm',e));
+      if('requestIdleCallback' in window)requestIdleCallback(prepare,{timeout:5000});
+      else setTimeout(prepare,200);
+    }
+  },4800);
 }
 function ensureSpaceReady(){
   if(spacePromise)return spacePromise;
