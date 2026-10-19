@@ -1136,7 +1136,7 @@ function makeMover(item,wps,speed,r,kind){
     let rr=r;
     if(kind==='swim')rr=r+Math.sin(t*.8+lo)*.002;
     obj.position.copy(P).multiplyScalar(rr);orient(obj,P,F);item.fwd=F.clone();item.up=P.clone()};
-  item.update(0,0);movers.push(item)}
+  item.routePoints=pts;item.routeRadius=r;item.update(0,0);movers.push(item)}
 /* ================= GEOMETRY HELPERS ================= */
 function mergeParts(parts,useUV){let n=0;const gs=parts.map(([g,c,us,caps])=>[g.index?g.toNonIndexed():g,c,us,caps]);gs.forEach(([g])=>n+=g.attributes.position.count);
   const pos=new Float32Array(n*3),col=new Float32Array(n*3),uv=useUV?new Float32Array(n*2):null,cc=new THREE.Color(),l=new THREE.Color();let o=0;
@@ -1497,8 +1497,16 @@ const SKIND={iss:'Spacecraft',voyager:'Spacecraft',sun:'Star',moon:'Moon',io:'Mo
 function catName(it){if(it.cat==='landmark')return it.natural?'Natural wonder':'Wonder';if(it.cat==='space')return SKIND[it.id]||(it.far?'Deep space':'Planet');return CATN[it.cat]}
 
 /* ================= CARD / DEX / QUESTS ================= */
-let openId=null;
-function openItem(it,discoverIt){openId=it.id;const card=$('card');card.dataset.cat=it.cat;$('cardCat').textContent=catName(it);$('cardPlace').textContent=it.place||'';
+let openId=null,shownRoute=null;
+function showVehicleRoute(it){
+  if(shownRoute){world.remove(shownRoute);shownRoute.geometry.dispose();shownRoute.material.dispose();shownRoute=null}
+  if(!it||it.cat!=='vehicle'||!it.routePoints)return;
+  const positions=it.routePoints.map(p=>p.clone().multiplyScalar(it.routeRadius+.003));
+  const geometry=new THREE.BufferGeometry().setFromPoints(positions);
+  shownRoute=new THREE.LineLoop(geometry,new THREE.LineBasicMaterial({color:0xffd966,transparent:true,opacity:.72,depthWrite:false}));
+  shownRoute.frustumCulled=false;world.add(shownRoute);
+}
+function openItem(it,discoverIt){showVehicleRoute(it);openId=it.id;const card=$('card');card.dataset.cat=it.cat;$('cardCat').textContent=catName(it);$('cardPlace').textContent=it.place||'';
   $('cardName').innerHTML=(it.flag?`<span class="flag">${it.flag}</span>`:'')+esc(it.name);
   $('cardStats').innerHTML=(it.stats||[]).map(([k,v])=>`<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
   const f=it.facts||[];$('cardFacts').innerHTML=f.map((x,i)=>i===f.length-1&&f.length>1?`<li class="dyk"><strong>Did you know?</strong>${esc(x)}</li>`:`<li>${esc(x)}</li>`).join('');
@@ -1509,7 +1517,7 @@ function openItem(it,discoverIt){openId=it.id;const card=$('card');card.dataset.
   if(discoverIt)discover(it)}
 $('cardActions').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const it=ITEMS.get(openId);const a=b.dataset.a;
   if(a==='zoom'){flyTo(it.lat,it.lon,.22)}else if(a==='ride'){startRide(it)}else if(a==='launch'){launch()}else if(a==='visit'){scFlyTo(it)}});
-$('cardClose').onclick=()=>{$('card').hidden=true;openId=null};
+$('cardClose').onclick=()=>{$('card').hidden=true;openId=null;showVehicleRoute(null)};
 function discover(it){if(found.has(it.id))return;found.add(it.id);save();updateCounts();
   if(it.cat==='vehicle')return;if(it.cat==='landmark'){splash(it);blip([523,659,784,1047])}else{toast('New discovery!',it.name);blip([660,880,1320])}checkQuest(it.id)}
 function splash(it){const s=$('splash');$('spEy').textContent=it.natural?'Natural wonder discovered':'Wonder discovered';$('spName').textContent=it.name;$('spMeta').textContent=[it.place,!it.natural&&YEARS[it.id]?'Built '+YEARS[it.id]:''].filter(Boolean).join(' · ');$('spQuote').textContent=it.facts[0];s.hidden=false;s.style.animation='none';void s.offsetHeight;s.style.animation='';clearTimeout(splash.t);splash.t=setTimeout(()=>s.hidden=true,4200)}
