@@ -1310,7 +1310,7 @@ function planetTex(fn,W,bumpFn){const H=W/2,cv=document.createElement('canvas');
 function alphaTex(fn,W){const H=W/2,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d'),img=x.createImageData(W,H),d=img.data,v=new V3();
   for(let j=0;j<H;j++){const th=(j+.5)/H*Math.PI,st=Math.sin(th),ct=Math.cos(th);for(let i=0;i<W;i++){const ph=(i+.5)/W*TAU;v.set(-Math.cos(ph)*st,ct,Math.sin(ph)*st);const k=(j*W+i)*4;d[k]=d[k+1]=d[k+2]=255;d[k+3]=clamp(fn(v),0,1)*255}}
   x.putImageData(img,0,0);return ctex(cv)}
-function planetMesh(r,fn,o={}){const W=Math.min(o.res||1024,HQ?2048:512),tx=planetTex(fn,W,o.bump),seg=HQ?96:48;
+function planetMesh(r,fn,o={}){const W=Math.min(o.res||1024,HQ?1024:384),tx=planetTex(fn,W,o.bump),seg=HQ?96:48;
   return new THREE.Mesh(new THREE.SphereGeometry(r,seg,seg/2),new THREE.MeshStandardMaterial({map:tx.map,bumpMap:tx.bump||null,bumpScale:o.bumpScale||.03*r,roughness:o.rough??.88,metalness:0}))}
 function dotOf(fn){const c=new THREE.Color();fn(new V3(.35,.2,.91).normalize(),c);return'#'+new THREE.Color(clamp(c.r,0,1),clamp(c.g,0,1),clamp(c.b,0,1)).getHexString()}
 const STAR_SHADERS=[];
@@ -1331,12 +1331,12 @@ function ringMesh(rin,rout,cols){const cv=document.createElement('canvas');cv.wi
 function sItem(o){o.cat='space';o.mode='space';o.label=o.label??true;ITEMS.set(o.id,o);spaceItems.push(o);const pr=Math.max(o.r*1.25,o.pickR||1.4);const pk=new THREE.Mesh(new THREE.SphereGeometry(pr,10,8),new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false}));pk.userData.item=o;o.obj.add(pk);spacePick.push(pk);return o}
 async function buildSpace(){
   // milky way sky
-  const SK=HQ?1.5:1,cv=document.createElement('canvas');cv.width=2048*SK;cv.height=1024*SK;const x=cv.getContext('2d');x.scale(SK,SK);x.fillStyle='#02030a';x.fillRect(0,0,2048,1024);
+  const SK=1,cv=document.createElement('canvas');cv.width=2048*SK;cv.height=1024*SK;const x=cv.getContext('2d');x.scale(SK,SK);x.fillStyle='#02030a';x.fillRect(0,0,2048,1024);
   const blob=(cx,cy,r,col,a)=>{const g=x.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,col.replace('A',a));g.addColorStop(1,col.replace('A',0));x.fillStyle=g;x.fillRect(cx-r,cy-r,r*2,r*2)};
-  for(let i=0;i<420;i++){const cx=rand()*2048,center=Math.exp(-Math.pow((cx-1024)/520,2));const cy=512+(rand()-.5)*(70+60*center)*1.6;const r=30+rand()*90*(.5+center);const pal=['rgba(150,140,255,A)','rgba(120,170,255,A)','rgba(255,200,160,A)','rgba(255,150,200,A)'];blob(cx,cy,r,pal[i%4],(.025+rand()*.04)*(.5+center*1.2))}
+  for(let i=0;i<(HQ?260:160);i++){const cx=rand()*2048,center=Math.exp(-Math.pow((cx-1024)/520,2));const cy=512+(rand()-.5)*(70+60*center)*1.6;const r=30+rand()*90*(.5+center);const pal=['rgba(150,140,255,A)','rgba(120,170,255,A)','rgba(255,200,160,A)','rgba(255,150,200,A)'];blob(cx,cy,r,pal[i%4],(.025+rand()*.04)*(.5+center*1.2))}
   for(let i=0;i<120;i++){const cx=rand()*2048;blob(cx,512+(rand()-.5)*30,20+rand()*40,'rgba(2,3,10,A)',.35)}
   blob(1024,512,180,'rgba(255,220,170,A)',.25);
-  for(let i=0;i<9000;i++){const yy=rand()<.55?512+(rand()+rand()+rand()-1.5)*160:rand()*1024;const b=rand();x.fillStyle=`rgba(${220+b*35|0},${220+b*30|0},255,${.35+b*.65})`;const s=b>.97?2.2:b>.85?1.4:.9;x.fillRect(rand()*2048,yy,s,s)}
+  for(let i=0;i<(HQ?6000:3500);i++){const yy=rand()<.55?512+(rand()+rand()+rand()-1.5)*160:rand()*1024;const b=rand();x.fillStyle=`rgba(${220+b*35|0},${220+b*30|0},255,${.35+b*.65})`;const s=b>.97?2.2:b>.85?1.4:.9;x.fillRect(rand()*2048,yy,s,s)}
   // The sky is viewed at many angles; mipmaps prevent distant starfield shimmer.
   const skyTex=ctex(cv);skyTex.generateMipmaps=true;skyTex.minFilter=THREE.LinearMipmapLinearFilter;const sky=new THREE.Mesh(new THREE.SphereGeometry(3500,48,24),new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,depthWrite:false}));sky.rotation.y=Math.PI;spaceScene.add(sky);
   spaceScene.add(new THREE.AmbientLight(0x7380aa,.34),new THREE.HemisphereLight(0x8090c0,0x201828,.12));const pl=new THREE.PointLight(0xfff1d6,1.35,0,0);spaceScene.add(pl);
@@ -1592,8 +1592,10 @@ const rv=s=>new V3((Math.random()-.5)*s,(Math.random()-.5)*s,(Math.random()-.5)*
 const ctEl=$('count'),ctNum=$('ctNum'),ctMsg=$('ctMsg'),ctArc=$('ctArc');
 const CT_MSG={10:'All systems go',9:'Crew is strapped in',8:'Crew access arm swinging away',7:'Switching to internal power',6:'Water deluge on',5:'Flight computers in control',4:'Engine start sequence',3:'Main engines start!',2:'Engines at full power',1:'Boosters ready…'};
 function tick(k){ctNum.textContent=k;ctMsg.textContent=CT_MSG[k]||'';ctNum.classList.remove('pop');void ctNum.offsetWidth;ctNum.classList.add('pop');blip([k<=3?988:740]);if(k===3)rumble(9)}
-async function launch(){if(mode!=='earth'||launchState)return;exitRide();$('card').hidden=true;const ksc=ITEMS.get('ksc').obj;launchState={phase:'fly',ksc};ensureSpaceReady();flyTo(28.2,-80.9,.2);await wait(1700);
-  if(!spaceReady)toast('Fueling the rocket…','Almost ready for launch');await spacePromise;
+async function launch(){if(mode!=='earth'||launchState)return;exitRide();$('card').hidden=true;const ksc=ITEMS.get('ksc').obj;launchState={phase:'fly',ksc};flyTo(28.2,-80.9,.2);await wait(350);
+  // Let the camera begin its approach before heavy space generation.
+  const preparing=ensureSpaceReady();await wait(1350);
+  if(!spaceReady)toast('Fueling the rocket…','Preparing the solar system');await preparing;
   const ud=ksc.userData,r=ud.rocket;Object.assign(launchState,{phase:'count',t:0,last:11,ud,rocket:r,tau:0,v:0,r0:{p:r.position.clone(),q:r.quaternion.clone()},b0:ud.boosters.map(b=>({p:b.position.clone(),q:b.quaternion.clone()}))});
   ctEl.hidden=false;ctEl.classList.remove('lift');ctArc.style.strokeDashoffset='0';tick(10);launchState.last=10}
 function padCam(P0,n,ea,no,drift,target){const a=-.75+drift,pos=P0.clone().addScaledVector(ea,Math.cos(a)*.13).addScaledVector(no,Math.sin(a)*.13).addScaledVector(n,.028);camera.position.copy(pos);camera.up.copy(n);camera.lookAt(target)}
@@ -1716,8 +1718,16 @@ async function boot(){
     try{buildMountains();requestAnimationFrame(()=>setTimeout(()=>{try{buildTrees()}catch(e){console.warn('Trees unavailable',e)}},0))}
     catch(e){console.warn('Mountain detail unavailable',e)}
   },0));
-  // Space creation is demand-driven so exploration remains responsive on first load.
+  // Warm the space scene opportunistically after Earth is interactive.
+  // Defer for several seconds so first-paint performance remains the priority.
   if(location.hash==='#space')ensureSpaceReady();
+  else setTimeout(()=>{
+    if(!spacePromise && !document.hidden && !launchState){
+      const prepare=()=>ensureSpaceReady().catch(e=>console.warn('Space prewarm',e));
+      if('requestIdleCallback' in window)requestIdleCallback(prepare,{timeout:5000});
+      else setTimeout(prepare,200);
+    }
+  },4800);
 }
 function ensureSpaceReady(){
   if(spacePromise)return spacePromise;
