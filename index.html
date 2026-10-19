@@ -409,7 +409,7 @@ function paintMaps(){
 function weldSeams(geo,W,H){const n=geo.attributes.normal,a=new V3(),b=new V3();for(let y=0;y<=H;y++){const i=y*(W+1),j=i+W;a.fromBufferAttribute(n,i).add(b.fromBufferAttribute(n,j)).normalize();n.setXYZ(i,a.x,a.y,a.z);n.setXYZ(j,a.x,a.y,a.z)}
   for(const y of[1,H-1]){}for(const y of[0,H]){a.set(0,0,0);const yy=y===0?1:H-1;for(let x=0;x<=W;x++)a.add(b.fromBufferAttribute(n,yy*(W+1)+x));a.normalize();for(let x=0;x<=W;x++)n.setXYZ(y*(W+1)+x,a.x,a.y,a.z)}n.needsUpdate=true}
 function terrain(v){const lat=Math.asin(clamp(v.y,-1,1))/DEG,lon=Math.atan2(v.x,v.z)/DEG;const m=samp(MS,lat,lon),e=samp(EL,lat,lon);const n=fbm(v.x*5+3.1,v.y*5+1.7,v.z*5+.3);const land=smooth(.44,.58,m);
-  return{lat,lon,m,e,n,land,r:1+lerp(-.028,.005,land)+(1-land)*(n-.5)*.01}}
+  return{lat,lon,m,e,n,land,r:1+lerp(-.028,.004,land)+(1-land)*(n-.5)*.01+land*Math.pow(Math.max(0,e),1.65)*.014+land*(n-.5)*e*.002}}
 function landAt(lat,lon){return samp(MS,lat,lon)}
 
 /* ================= RENDERER ================= */
@@ -840,6 +840,15 @@ const NATURAL=new Set(['everest','kilimanjaro','fuji','uluru','grandcanyon','vic
 const YEARS={eiffel:'1889',bigben:'1859',colosseum:'AD 80',pyramids:'c. 2560 BC',taj:'1653',greatwall:'700 BC – AD 1644',liberty:'1886',christ:'1931',machu:'c. 1450',opera:'1973',burj:'2010',pisa:'1372',basil:'1561',goldengate:'1937',chichen:'c. 800–1100',angkor:'c. 1150',parthenon:'438 BC',stonehenge:'c. 3000–1500 BC',moai:'c. 1250–1500',cntower:'1976',petronas:'1998',forbidden:'1420',neuschwanstein:'begun 1869',windmills:'c. 1740',sagrada:'begun 1882',hagia:'537',ksc:'1962',spaceneedle:'1962',petra:'c. 1st century',montstmichel:'begun 966',potala:'1648',terracotta:'c. 210 BC',brandenburg:'1791',torii:'1875',zimbabwe:'c. 1100–1450',panama:'1914',belem:'1519',elmorro:'begun 1539',citadelle:'1820'};
 // [id, name, lon, lat, halfWidthDeg, halfHeightDeg, rotationDeg, belongsTo, mainTown, fact, volcanic]
 const ISLANDS=[
+// Hawaiian island chain, real approximate island centers and orientations; rendered as navigable island meshes.
+["hawaii","Hawaiʻi (Big Island)",-155.55,19.6,0.67,0.57,-24,"United States","Hilo","Mauna Loa is one of Earth's largest volcanoes; Kīlauea is an active volcano.",1],
+["maui","Maui",-156.37,20.82,0.51,0.33,-35,"United States","Kahului","Haleakalā is a huge shield volcano; Maui has important native ecosystems.",1],
+["oahu","Oʻahu",-157.97,21.46,0.38,0.24,-22,"United States","Honolulu","Honolulu is Hawaiʻi's capital; Oʻahu contains Pearl Harbor.",1],
+["kauai","Kauaʻi",-159.53,22.05,0.35,0.27,18,"United States","Līhuʻe","The dramatic cliffs of the Nā Pali Coast were carved by erosion.",1],
+["molokai","Molokaʻi",-157.02,21.13,0.34,0.1,-5,"United States","Kaunakakai","Molokaʻi has some of the world's tallest sea cliffs.",1],
+["lanai","Lānaʻi",-156.92,20.83,0.19,0.14,-20,"United States","Lānaʻi City","Lānaʻi is a volcanic island west of Maui.",1],
+["niihau","Niʻihau",-160.17,21.9,0.2,0.13,12,"United States","Puʻuwai","Niʻihau lies west of Kauaʻi and has a small resident community."],
+["kahoolawe","Kahoʻolawe",-156.6,20.55,0.14,0.1,-24,"United States","Kahoʻolawe","Kahoʻolawe is being restored after decades of military use."],
 ['jamaica','Jamaica',-77.3,18.12,1.1,.36,-8,'Jamaica','Kingston','Reggae music was born here, and the island has more than 100 rivers.',1],
 ['puertorico','Puerto Rico',-66.45,18.22,.86,.24,0,'United States (territory)','San Juan','El Yunque is the only tropical rainforest in the U.S. National Forest System.',1],
 ['grandcayman','Grand Cayman',-81.25,19.32,.18,.07,0,'Cayman Islands (UK)','George Town','At Stingray City you can stand in shallow water with friendly stingrays.'],
@@ -959,6 +968,12 @@ const CITIES=[
 ['sydney','Sydney','Australia',-33.87,151.21,5.3,['Australia’s biggest city.','Its Harbour Bridge is nicknamed “the Coathanger.”'],{lm:'opera'}]
 ];
 
+// Hawaiian cities and volcanic island geography.
+CITIES.push(
+  ['honolulu','Honolulu','United States (Hawaiʻi)',21.309,-157.858,1,['Capital of Hawaiʻi, on the island of Oʻahu.','The Hawaiian Islands formed as the Pacific Plate moved over a volcanic hotspot.'],{isle:true}],
+  ['hilo','Hilo','United States (Hawaiʻi)',19.724,-155.087,.05,['A rainy city on the eastern side of Hawaiʻi Island.','Nearby Hawaiʻi Volcanoes National Park protects volcanic landscapes.'],{isle:true}],
+  ['kahului','Kahului','United States (Hawaiʻi)',20.889,-156.472,.03,['A major town and airport gateway on the island of Maui.'],{isle:true}]
+);
 // Additional global learning destinations; population figures are illustrative metro-scale map tiers, not live census estimates.
 CITIES.push(
   ["vancouver","Vancouver","Canada",49.28,-123.12,2.6,["Pacific port surrounded by mountains."]],
