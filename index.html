@@ -1106,7 +1106,7 @@ function buildPlaces(){
     else if(opt.float){placeOn(obj,lat,lon,s,{r:.998});const y0=obj.position.clone();animators.push((dt,t)=>{obj.position.copy(y0).multiplyScalar(1+Math.sin(t*1.2)*.0015);obj.rotateY(dt*.15)})}
     else{placeOn(obj,lat,lon,s);const p0=obj.position.clone(),n=p0.clone().normalize(),ph=rand()*TAU;animators.push((dt,t)=>obj.position.copy(p0).addScaledVector(n,Math.max(0,Math.sin(t*2.2+ph))*.0012))}
     reg(item)});
-  buildCities();
+  buildCities(CITIES.slice(0,44));
   VEHICLES.forEach(([id,name,route,path,kind,col,speed,facts])=>{const obj=vehicleModel(kind,col);world.add(obj);obj.scale.setScalar(VSCALE[kind]);const item={id,cat:'vehicle',name,place:route,facts:[`Illustrative service route: ${route}. Vehicles follow geographic waypoints; this is not live transport tracking.`,...facts],stats:[['Route',route],['Mode',kind==='heli'?'Helicopter':kind.startsWith('b')||kind.startsWith('a')?'Air travel':'Sea travel']],obj,mode:'earth',ride:true};makeMover(item,path,speed,VALT[kind],kind);reg(item);if(obj.userData.rotor){const ro=obj.userData.rotor,tr=obj.userData.tail;animators.push(dt=>{ro.rotation.y+=dt*28;tr.rotation.x+=dt*40})}});
   // ISS
   const iss=G(B(.9,.03,.03,'#cfd6de',0,0,0),R(C(.045,.045,.36,'#eef1f4',0,0,0,8),Math.PI/2,0,0),R(C(.04,.04,.2,'#e2e6ea',.12,0,0,8),0,0,Math.PI/2),B(.06,.12,.004,'#f4f6f8',-.1,.1,0));
@@ -1193,9 +1193,9 @@ const WIN=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;
 const CITY_WIN=new THREE.MeshStandardMaterial({vertexColors:true,map:WIN,roughness:.35,metalness:.22}),CITY_PLAIN=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75});
 const cityBanners=[];
 const popStr=p=>p>=10?Math.round(p)+'M':p>=1?p.toFixed(1)+'M':Math.round(p*1000)+'K';
-function buildCities(){const lmAvoid=[...ITEMS.values()].filter(i=>i.cat==='landmark').map(i=>({id:i.id,p:ll2v(i.lat,i.lon),r2:Math.pow(i.footR+.002,2)}));
+function buildCities(cityRows=CITIES){const lmAvoid=[...ITEMS.values()].filter(i=>i.cat==='landmark').map(i=>({id:i.id,p:ll2v(i.lat,i.lon),r2:Math.pow(i.footR+.002,2)}));
   const GLASS=['#8fb3d9','#a9c6de','#7d9cc0','#c9d6e2','#9bb8c9','#6f8fb3','#b7c4d1'],MID=['#e9e4d8','#d6dde6','#c8b79a','#e0c7b4','#b9c7d6','#efe2c8'],WALL=['#f1e3c6','#e8d2b0','#f4efe6','#dcc6a0','#cfd8dc','#f0d9c4'],ROOF=['#c2553c','#a8432f','#8a5a44','#5f6b7a','#b8743a','#9b4a3a'];
-  CITIES.forEach(([id,name,country,lat,lon,pop,facts,opt={}])=>{
+  cityRows.forEach(([id,name,country,lat,lon,pop,facts,opt={}])=>{
     const lm=opt.lm?ITEMS.get(opt.lm):null,cLat=lm?lm.lat:lat,cLon=lm?lm.lon:lon,isle=!!opt.isle,Rn=mulberry(id.split('').reduce((s,ch)=>(s*31+ch.charCodeAt(0))|0,7));
     const tier=pop>=15?3:pop>=5?2:pop>=1.5?1:0,sc=isle?.016:.03,inner=lm?lm.footR/sc+.08:0,outer=lm?inner+.5+tier*.12:(isle?.62:.62+tier*.16),base=isle?ISLE_TOP:1.005;
     const C0=ll2v(cLat,cLon),NO=north(cLat*DEG,cLon*DEG),EA=new V3().crossVectors(NO,C0),glass=[],plain=[],taken=[];
@@ -1726,6 +1726,16 @@ async function boot(){
     try{buildMountains();requestAnimationFrame(()=>setTimeout(()=>{try{buildTrees()}catch(e){console.warn('Trees unavailable',e)}},0))}
     catch(e){console.warn('Mountain detail unavailable',e)}
   },0));
+  // Gradually populate the additional city models after first interaction.
+  let nextCity=44;
+  function addCityBatch(){
+    if(nextCity>=CITIES.length)return;
+    const stop=Math.min(CITIES.length,nextCity+2);
+    try{buildCities(CITIES.slice(nextCity,stop));nextCity=stop;updateCounts()}
+    catch(e){console.warn('Deferred city model',e);nextCity=stop}
+    if(nextCity<CITIES.length)requestAnimationFrame(()=>setTimeout(addCityBatch,0));
+  }
+  setTimeout(()=>requestAnimationFrame(addCityBatch),2000);
   // Warm the space scene opportunistically after Earth is interactive.
   // Defer for several seconds so first-paint performance remains the priority.
   if(location.hash==='#space')ensureSpaceReady();
