@@ -14,6 +14,8 @@ const {chromium}=require('playwright');
  console.log('Browser Earth smoke test passed:',JSON.stringify(state));
  // Exercise the deferred space-loading path as well as the initial Earth render.
  await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:30000});
+ // Changing just the hash does not reload the app; test the documented direct-entry route.
+ await page.reload({waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',null,{timeout:120000});
  await page.waitForTimeout(1500);
  const space=await page.evaluate(()=>window.branchAdventurePerf.snapshot());
