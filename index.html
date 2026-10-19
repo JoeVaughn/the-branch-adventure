@@ -955,6 +955,40 @@ const CITIES=[
 ['tokyo','Tokyo','Japan',36.1,140.2,37.1,['The biggest metro area on Earth, with about 37 million people.','Its train stations are some of the busiest in the world.']],
 ['sydney','Sydney','Australia',-33.87,151.21,5.3,['Australia’s biggest city.','Its Harbour Bridge is nicknamed “the Coathanger.”'],{lm:'opera'}]
 ];
+
+// Additional global learning destinations; population figures are illustrative metro-scale map tiers, not live census estimates.
+CITIES.push(
+  ["vancouver","Vancouver","Canada",49.28,-123.12,2.6,["Pacific port surrounded by mountains."]],
+  ["montreal","Montréal","Canada",45.5,-73.57,4.3,["A major French-speaking city on the Saint Lawrence River."]],
+  ["miami","Miami","USA",25.76,-80.19,6,["A major gateway between North America and the Caribbean."]],
+  ["bogota","Bogotá","Colombia",4.71,-74.07,8,["Colombia's high-altitude capital in the Andes."]],
+  ["santiago","Santiago","Chile",-33.45,-70.67,7,["Chile's capital sits beneath the Andes."]],
+  ["quito","Quito","Ecuador",-0.18,-78.47,2.8,["High in the Andes, near the equator."]],
+  ["capetown","Cape Town","South Africa",-33.92,18.42,4.8,["A coastal city beside Table Mountain."]],
+  ["addisababa","Addis Ababa","Ethiopia",9.03,38.74,5,["Home to the headquarters of the African Union."]],
+  ["accra","Accra","Ghana",5.56,-0.2,2.5,["Ghana's Atlantic-facing capital."]],
+  ["kinshasa","Kinshasa","DR Congo",-4.32,15.32,15,["A major city on the Congo River."]],
+  ["casablanca","Casablanca","Morocco",33.57,-7.59,3.7,["One of North Africa's major Atlantic ports."]],
+  ["algiers","Algiers","Algeria",36.75,3.06,3.5,["Algeria's Mediterranean capital."]],
+  ["amsterdam","Amsterdam","Netherlands",52.37,4.9,2.5,["Historic canals and a long maritime trading tradition."]],
+  ["stockholm","Stockholm","Sweden",59.33,18.07,2.4,["Built across islands near the Baltic Sea."]],
+  ["oslo","Oslo","Norway",59.91,10.75,1.1,["Norway's capital sits beside Oslofjord."]],
+  ["warsaw","Warsaw","Poland",52.23,21.01,1.9,["Its historic Old Town was rebuilt after World War II."]],
+  ["kyiv","Kyiv","Ukraine",50.45,30.52,3,["Ukraine's capital on the Dnipro River."]],
+  ["riyadh","Riyadh","Saudi Arabia",24.71,46.68,7,["Saudi Arabia's capital on the Arabian Peninsula."]],
+  ["delhi","Delhi","India",28.61,77.21,32,["The Indian capital region has layers of historical architecture."]],
+  ["kolkata","Kolkata","India",22.57,88.36,15,["A major city beside the Hooghly River."]],
+  ["manila","Manila","Philippines",14.6,120.98,14,["A major port on Manila Bay."]],
+  ["hanoi","Hanoi","Vietnam",21.03,105.85,8,["Vietnam's capital is known for its lakes and old quarter."]],
+  ["hochiminh","Ho Chi Minh City","Vietnam",10.82,106.63,9,["Vietnam's large southern trading center."]],
+  ["taipei","Taipei","Taiwan",25.03,121.56,7,["Known for its night markets and technology industry."]],
+  ["osaka","Osaka","Japan",34.69,135.5,19,["A historic Japanese merchant city."]],
+  ["auckland","Auckland","New Zealand",-36.85,174.76,1.7,["A harbor city on New Zealand's North Island."]],
+  ["melbourne","Melbourne","Australia",-37.81,144.96,5,["Known for its arts and sports culture."]],
+  ["perth","Perth","Australia",-31.95,115.86,2.2,["Western Australia's capital on the Swan River."]],
+  ["suva","Suva","Fiji",-18.14,178.44,0.3,["Fiji's capital on Viti Levu island."]],
+  ["portmoresby","Port Moresby","Papua New Guinea",-9.47,147.16,0.4,["A coastal capital on the island of New Guinea."]]
+);
 const circ=(la,lo,r,n=10)=>Array.from({length:n},(_,i)=>{const a=i/n*TAU;return[la+Math.sin(a)*r,lo+Math.cos(a)*r/Math.cos(la*DEG)]});
 const VEHICLES=[
 ['plane1','Boeing 747-8','New York ⇄ London',[[40.6,-73.8],[51.5,-.5]],'b747','#2a5fbf',.0016,['The “Queen of the Skies” is about 76 m long, longer than a blue whale!','Its famous hump holds an upper deck.','It cruises at about 920 km/h.']],
