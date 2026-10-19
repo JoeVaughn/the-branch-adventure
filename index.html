@@ -8,7 +8,7 @@
 <title>The Branch Adventure</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&family=JetBrains+Mono:wght@500&family=Orbitron:wght@600;700;800&display=swap">
 <style>
 /* Layout: full-bleed WebGL stage; HUD floats in four corners like a toy box lid. Single deliberate night-space look. */
 :root{
@@ -52,7 +52,10 @@ button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 .hud-top{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding-top:max(14px,env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none;flex-wrap:wrap}
 .hud-top>*{pointer-events:auto}
 .brand{display:flex;align-items:center;gap:10px}
-.logo{font-family:var(--f-display);font-weight:700;font-size:32px;line-height:1;color:var(--sun);text-shadow:0 3px 0 var(--sun-deep),0 6px 14px rgba(0,0,0,.45);letter-spacing:.01em}
+/* Retro-futurist arcade wordmark: neon cyan, geometric 1980s sci-fi typography. */
+.logo{font-family:'Orbitron','Arial Black',sans-serif;font-weight:800;font-size:clamp(17px,2.35vw,29px);line-height:1.16;text-transform:uppercase;letter-spacing:.095em;color:#c9faff;-webkit-text-stroke:.45px #e0ffff;text-shadow:0 0 2px #fff,0 0 10px rgba(0,238,255,.95),0 0 22px rgba(0,154,255,.7),0 3px 1px #093665;filter:drop-shadow(0 0 5px rgba(0,220,255,.35))}
+@media(max-width:560px){.logo{font-size:clamp(14px,3.8vw,19px);letter-spacing:.045em;max-width:64vw}}
+@media(prefers-reduced-motion:no-preference){.logo{animation:logoNeonOn .9s ease-out both}@keyframes logoNeonOn{from{opacity:.35;filter:brightness(.7)}to{opacity:1;filter:drop-shadow(0 0 5px rgba(0,220,255,.35))}}}
 .tag{font-family:var(--f-display);font-weight:700;font-size:11px;letter-spacing:.08em;background:var(--sun);color:#3a2600;padding:3px 9px;border-radius:999px;box-shadow:0 2px 0 var(--sun-deep)}
 .stats{margin-top:8px;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.09em;color:var(--muted);text-transform:uppercase;text-shadow:0 1px 2px #000}
 .quest{margin-top:10px;max-width:360px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px 12px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
