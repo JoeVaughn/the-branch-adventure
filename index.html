@@ -1026,7 +1026,8 @@ function buildEarth(){
   wg.setAttribute('color',new THREE.BufferAttribute(wc,3));
   const wm=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.86,roughness:HQ?.12:.3,metalness:HQ?.1:.02});
   wm.onBeforeCompile=sh=>{sh.uniforms.uTime=WATER_T;sh.uniforms.uAmp=WAVE_A;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWP=position;');
-    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uTime;uniform float uAmp;varying vec3 vWP;').replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n{vec3 q=vWP*220.;float t=uTime;vec3 w=vec3(sin(q.x+t*1.3)+sin(q.y*1.7-t*1.1),sin(q.y+t*1.1)+sin(q.z*1.4+t*.7),sin(q.z+t*.9)+sin(q.x*1.3-t*1.2));q*=3.1;w+=.5*vec3(sin(q.y-t*2.),sin(q.z+t*1.7),sin(q.x+t*2.3));normal=normalize(normal+w*uAmp);}')};
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uTime;uniform float uAmp;varying vec3 vWP;').replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n{vec3 q=vWP*220.;float t=uTime;vec3 w=vec3(sin(q.x+t*1.3)+sin(q.y*1.7-t*1.1),sin(q.y+t*1.1)+sin(q.z*1.4+t*.7),sin(q.z+t*.9)+sin(q.x*1.3-t*1.2));q*=3.1;w+=.5*vec3(sin(q.y-t*2.),sin(q.z+t*1.7),sin(q.x+t*2.3));normal=normalize(normal+w*uAmp);}')
+      .replace('#include <dithering_fragment>','float glint=pow(1.-clamp(dot(normalize(normal),normalize(vViewPosition)),0.,1.),4.);gl_FragColor.rgb+=vec3(.035,.115,.17)*glint;\n#include <dithering_fragment>');};
   water=new THREE.Mesh(wg,wm);water.receiveShadow=true;world.add(water);
   // Single physically inspired atmospheric rim shell is added by buildAtmosphere().
   // stars
@@ -1047,6 +1048,7 @@ function buildAtmosphere(){
       side:THREE.BackSide,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
     }));
   atmosphere.frustumCulled=true;atmosphere.renderOrder=-1;world.add(atmosphere);
+  world.userData.atmosphere=atmosphere;
 }
 function buildLight(){sunL=new THREE.DirectionalLight(0xfff0d8,1.05);sunL.castShadow=true;sunL.shadow.mapSize.set(HQ?2048:1024,HQ?2048:1024);sunL.shadow.bias=-.0004;sunL.shadow.normalBias=.0015;const sc=sunL.shadow.camera;sc.near=.2;sc.far=7;earthScene.add(sunL,sunL.target);launchLight=new THREE.PointLight(0xffa04a,0,.35,2);earthScene.add(launchLight)}
 
@@ -1628,7 +1630,8 @@ function updateEarth(dt,t){
   const cam=camera;const right=new V3().setFromMatrixColumn(cam.matrixWorld,0),up=new V3().setFromMatrixColumn(cam.matrixWorld,1),back=new V3().setFromMatrixColumn(cam.matrixWorld,2);
   Ld.copy(right).multiplyScalar(-.45).addScaledVector(up,.75).addScaledVector(back,.55).normalize();
   const focus=ride?ride.it.obj.position:launchState?launchState.ksc.position:ll2v(EC.lat,EC.lon,1);shadowCenter.copy(focus);
-  const s=ride?.35:launchState?.4:clamp(EC.alt*.62+.08,.12,1.15);sunL.position.copy(shadowCenter).addScaledVector(Ld,3);sunL.target.position.copy(shadowCenter);sunL.target.updateMatrixWorld();
+  const s=ride?.35:launchState?.4:clamp(EC.alt*.62+.08,.12,1.15);sunL.position.copy(shadowCenter).addScaledVector(Ld,3);
+  if(world.userData.atmosphere)world.userData.atmosphere.material.uniforms.uLight.value.copy(Ld);sunL.target.position.copy(shadowCenter);sunL.target.updateMatrixWorld();
   const sc=sunL.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.updateProjectionMatrix()}
   // cull far side
   const cd=camera.position.clone().normalize(),hor=1/camera.position.length()-.2;
