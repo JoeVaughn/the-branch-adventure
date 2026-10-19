@@ -1,0 +1,27 @@
+name: Browser smoke test
+on:
+  push:
+    branches: [feature/graphics-performance-v1]
+  pull_request:
+    branches: [main]
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright
+      - run: npx playwright install --with-deps chromium
+      - run: python3 -m http.server 8000 --bind 127.0.0.1 > /tmp/branch-server.log 2>&1 &
+      - run: node tests/browser-smoke.cjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: earth-browser-screenshot
+          path: |
+            earth-smoke.png
+            space-smoke.png
+          if-no-files-found: ignore
