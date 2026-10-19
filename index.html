@@ -1024,7 +1024,7 @@ function buildEarth(){
   const WS=HQ?640:300,wg=new THREE.SphereGeometry(1,WS,WS/2),wp=wg.attributes.position,wc=new Float32Array(wp.count*3),DEEP=new THREE.Color('#1c5cab'),MID=new THREE.Color('#2a8ad0'),SHAL=new THREE.Color('#47cbe0'),FOAM=new THREE.Color('#d2f7ef');
   for(let i=0;i<wp.count;i++){v.fromBufferAttribute(wp,i);const[la,lo]=v2ll(v);const s=smooth(.02,.5,samp(MWB,la,lo));c.copy(DEEP).lerp(MID,smooth(0,.35,s)).lerp(SHAL,smooth(.3,1,s)).lerp(FOAM,smooth(.4,.5,samp(MS,la,lo))*.55);lin(c);wc[i*3]=c.r;wc[i*3+1]=c.g;wc[i*3+2]=c.b}
   wg.setAttribute('color',new THREE.BufferAttribute(wc,3));
-  const wm=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.86,roughness:.14,metalness:.04});
+  const wm=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.86,roughness:HQ?.17:.3,metalness:.04});
   wm.onBeforeCompile=sh=>{sh.uniforms.uTime=WATER_T;sh.uniforms.uAmp=WAVE_A;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vWP;').replace('#include <begin_vertex>','#include <begin_vertex>\nvWP=position;');
     sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\nuniform float uTime;uniform float uAmp;varying vec3 vWP;').replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n{vec3 q=vWP*220.;float t=uTime;vec3 w=vec3(sin(q.x+t*1.3)+sin(q.y*1.7-t*1.1),sin(q.y+t*1.1)+sin(q.z*1.4+t*.7),sin(q.z+t*.9)+sin(q.x*1.3-t*1.2));q*=3.1;w+=.5*vec3(sin(q.y-t*2.),sin(q.z+t*1.7),sin(q.x+t*2.3));normal=normalize(normal+w*uAmp);}')};
   water=new THREE.Mesh(wg,wm);water.receiveShadow=true;world.add(water);
@@ -1041,7 +1041,18 @@ function buildEarth(){
   earthScene.add(new THREE.AmbientLight(0x8a9bc4,.16),new THREE.HemisphereLight(0xeaf4ff,0x3a4c66,.3));earthScene.environment=makeEnv();earthScene.fog=new THREE.FogExp2(0x000000,0);
 }
 let sunL,launchLight;
-function buildLight(){sunL=new THREE.DirectionalLight(0xfff0d8,1.05);sunL.castShadow=true;sunL.shadow.mapSize.set(HQ?4096:2048,HQ?4096:2048);sunL.shadow.bias=-.0004;sunL.shadow.normalBias=.0015;const sc=sunL.shadow.camera;sc.near=.2;sc.far=7;earthScene.add(sunL,sunL.target);launchLight=new THREE.PointLight(0xffa04a,0,.35,2);earthScene.add(launchLight)}
+// Low-cost atmospheric limb glow: single draw call, no render targets or textures.
+function buildAtmosphere(){
+  const atmosphere=new THREE.Mesh(new THREE.SphereGeometry(1.067,HQ?96:48,HQ?48:24),
+    new THREE.ShaderMaterial({
+      uniforms:{uColor:{value:new THREE.Color('#63baff')},uStrength:{value:HQ?.42:.25}},
+      vertexShader:`varying vec3 vNormal;varying vec3 vView;void main(){vec4 worldPos=modelMatrix*vec4(position,1.);vNormal=normalize(mat3(modelMatrix)*normal);vView=normalize(cameraPosition-worldPos.xyz);gl_Position=projectionMatrix*viewMatrix*worldPos;}`,
+      fragmentShader:`uniform vec3 uColor;uniform float uStrength;varying vec3 vNormal;varying vec3 vView;void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.5);gl_FragColor=vec4(uColor,rim*uStrength);}`,
+      side:THREE.BackSide,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
+    }));
+  atmosphere.frustumCulled=true;atmosphere.renderOrder=-1;world.add(atmosphere);
+}
+function buildLight(){sunL=new THREE.DirectionalLight(0xfff0d8,1.05);sunL.castShadow=true;sunL.shadow.mapSize.set(HQ?2048:1024,HQ?2048:1024);sunL.shadow.bias=-.0004;sunL.shadow.normalBias=.0015;const sc=sunL.shadow.camera;sc.near=.2;sc.far=7;earthScene.add(sunL,sunL.target);launchLight=new THREE.PointLight(0xffa04a,0,.35,2);earthScene.add(launchLight)}
 
 function buildPlaces(){
   LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id](),natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
@@ -1599,7 +1610,7 @@ function drawWarp(dt){wc.style.opacity=warpAmt.toFixed(2);if(warpAmt<.02)return;
   streaks.forEach(s=>{s.r+=dt*s.s*(1+warpAmt*3);if(s.r>1)s.r=.05;const r0=s.r*R,r1=r0+(20+warpAmt*160)*s.r;wx.strokeStyle=`rgba(200,220,255,${(s.r*.8).toFixed(2)})`;wx.lineWidth=1+s.r*2;wx.beginPath();wx.moveTo(cx+Math.cos(s.a)*r0,cy+Math.sin(s.a)*r0);wx.lineTo(cx+Math.cos(s.a)*r1,cy+Math.sin(s.a)*r1);wx.stroke()})}
 
 /* ================= MAIN LOOP ================= */
-function setupComposer(){if(!HQ||!THREE.EffectComposer||!THREE.UnrealBloomPass)return;try{composer=new THREE.EffectComposer(renderer);if(composer.setPixelRatio)composer.setPixelRatio(renderDPR);composer.addPass(new THREE.RenderPass(spaceScene,scam));composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.8,.5,.93));composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader))}catch(e){console.warn(e);composer=null}}
+function setupComposer(){if(!HQ||!THREE.EffectComposer||!THREE.UnrealBloomPass)return;try{composer=new THREE.EffectComposer(renderer);if(composer.setPixelRatio)composer.setPixelRatio(renderDPR);composer.addPass(new THREE.RenderPass(spaceScene,scam));composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.55,.35,.94));composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader))}catch(e){console.warn(e);composer=null}}
 function applyRenderDPR(next){
   next=Math.max(dprFloor,Math.min(dprCeiling,Math.round(next*20)/20));
   if(Math.abs(next-renderDPR)<0.025)return;
@@ -1652,9 +1663,9 @@ document.addEventListener('visibilitychange',()=>{
 /* ================= BOOT ================= */
 async function boot(){
   await wait(30);paintMaps();$('loadMsg').textContent='Raising mountains…';await wait(20);
-  buildEarth();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
+  buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
   buildPlaces();buildIslands();buildMountains();buildTrees();buildLabels();updateCounts();renderQuest();setupComposer();resize();
-  loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),700);
+  if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),700);
   spacePromise=buildSpace().then(()=>{buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;if(location.hash==='#space')enterSpace()})}
 boot().catch(err=>{console.error(err);$('loadMsg').textContent='Something went wrong loading the planet: '+err.message});
 })();
