@@ -1008,7 +1008,7 @@ function noShadow(o){o.traverse(m=>{if(m.isMesh){m.castShadow=false}})}
 
 function buildEarth(){
   // land
-  const LW=HQ?600:360,LH=LW/2,geo=new THREE.SphereGeometry(1,LW,LH),pos=geo.attributes.position,cnt=pos.count,col=new Float32Array(cnt*3),v=new V3();
+  const LW=HQ?480:288,LH=LW/2,geo=new THREE.SphereGeometry(1,LW,LH),pos=geo.attributes.position,cnt=pos.count,col=new Float32Array(cnt*3),v=new V3();
   const c=new THREE.Color(),SAND=new THREE.Color('#f0dca0'),ROCK=new THREE.Color('#a39a86'),SNOW=new THREE.Color('#fbfdff'),SH=new THREE.Color('#9fe3cf'),SD=new THREE.Color('#2a6f9e');
   for(let i=0;i<cnt;i++){v.fromBufferAttribute(pos,i).normalize();const t=terrain(v);pos.setXYZ(i,v.x*t.r,v.y*t.r,v.z*t.r);
     if(t.m<.5){c.copy(SH).lerp(SD,smooth(0,.7,1-t.m*2))}
@@ -1021,7 +1021,7 @@ function buildEarth(){
   const lm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:HQ?.88:.97,metalness:0,envMapIntensity:HQ?.9:.5,dithering:true});if(HQ)detailNoise(lm,new THREE.Vector3(240,900,.22));
   landMesh=new THREE.Mesh(geo,lm);landMesh.receiveShadow=true;landMesh.castShadow=HQ;world.add(landMesh);
   // water
-  const WS=HQ?640:300,wg=new THREE.SphereGeometry(1,WS,WS/2),wp=wg.attributes.position,wc=new Float32Array(wp.count*3),DEEP=new THREE.Color('#1c5cab'),MID=new THREE.Color('#2a8ad0'),SHAL=new THREE.Color('#47cbe0'),FOAM=new THREE.Color('#d2f7ef');
+  const WS=HQ?384:240,wg=new THREE.SphereGeometry(1,WS,WS/2),wp=wg.attributes.position,wc=new Float32Array(wp.count*3),DEEP=new THREE.Color('#1c5cab'),MID=new THREE.Color('#2a8ad0'),SHAL=new THREE.Color('#47cbe0'),FOAM=new THREE.Color('#d2f7ef');
   for(let i=0;i<wp.count;i++){v.fromBufferAttribute(wp,i);const[la,lo]=v2ll(v);const s=smooth(.02,.5,samp(MWB,la,lo));c.copy(DEEP).lerp(MID,smooth(0,.35,s)).lerp(SHAL,smooth(.3,1,s)).lerp(FOAM,smooth(.4,.5,samp(MS,la,lo))*.55);lin(c);wc[i*3]=c.r;wc[i*3+1]=c.g;wc[i*3+2]=c.b}
   wg.setAttribute('color',new THREE.BufferAttribute(wc,3));
   const wm=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.86,roughness:HQ?.12:.3,metalness:HQ?.1:.02,dithering:true});
