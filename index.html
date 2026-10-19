@@ -1028,6 +1028,24 @@ const VEHICLES=[
 ['ship5','Container Ship','Shanghai ⇄ Los Angeles',[[31.23,121.6],[35,145],[39,177],[36,-150],[33.73,-118.26]],'container','#2f7a4f',.001,['The Pacific is the biggest ocean, larger than all the land on Earth combined.','A crossing takes about two weeks.']],
 ['ship6','Sailing Yacht','Bridgetown → Kingstown → St. George’s → Bridgetown',[[13.10,-59.61],[13.15,-61.22],[12.05,-61.75]],'yacht','#e0473c',.0016,['The Caribbean’s steady trade winds make it great for sailing.','Sailors zigzag back and forth to sail into the wind.']]
 ];
+// Additional illustrative air and sea traffic, each tied to real geographic endpoints.
+VEHICLES.push(
+['plane8','Regional Jet','Toronto ⇄ Montréal',[[43.68,-79.63],[45.47,-73.74]],'a320','#65caff',.0020,['Regional air services link major Canadian cities.']],
+['plane9','Long-Haul Jet','Paris ⇄ New York',[[49.01,2.55],[40.64,-73.78]],'b787','#f0d575',.0015,['Air traffic crosses the North Atlantic each day.']],
+['plane10','Passenger Jet','Singapore ⇄ Bangkok',[[1.36,103.99],[13.69,100.75]],'a320','#7ac9a2',.0022,['Regional flights connect Southeast Asian capitals.']],
+['plane11','Passenger Jet','Nairobi ⇄ Johannesburg',[[-1.32,36.93],[-26.14,28.25]],'b787','#d787ff',.0018,['Air links connect East and southern Africa.']],
+['plane12','Long-Haul Jet','Sydney ⇄ Auckland',[[-33.94,151.18],[-37.0,174.79]],'b787','#fa9174',.0019,['Trans-Tasman flights connect Australia and New Zealand.']],
+['plane13','Passenger Jet','São Paulo ⇄ Santiago',[[-23.43,-46.47],[-33.39,-70.79]],'a320','#bfe86d',.0019,['This route crosses the Andes mountain range.']],
+['plane14','Passenger Jet','Delhi ⇄ Dubai',[[28.56,77.1],[25.25,55.36]],'a320','#ffadcd',.0020,['Flights connect India and the Arabian Peninsula.']],
+['plane15','Passenger Jet','Lagos ⇄ Accra',[[6.58,3.32],[5.6,-.17]],'a320','#80d7f5',.0021,['Regional flights link West African coastal cities.']],
+['heli3','Medical Helicopter','Honolulu coastal rescue',[[21.31,-157.86],[21.35,-157.82]],'heli','#ec6578',.001,['Emergency helicopters can hover above a location.']],
+['heli4','Mountain Patrol','Mount Fuji patrol',[[35.68,139.76],[35.36,138.73]],'heli','#f4c75f',.001,['Helicopters can circle mountain terrain slowly.']],
+['ship7','Container Ship','Singapore ⇄ Shanghai',[[1.26,103.85],[10,110],[22,119],[31.23,121.6]],'container','#f2a45b',.0009,['Cargo vessels connect Asian seaports.']],
+['ship8','Container Ship','Rotterdam ⇄ Hamburg',[[51.92,4.5],[52.4,3.5],[53.55,9.95]],'container','#68a6ef',.0010,['North Sea ports support European trade.']],
+['ship9','Cruise Ship','Sydney ⇄ Auckland',[[-33.86,151.23],[-35.0,160],[-36.85,174.76]],'cruise','#e2b7f9',.0009,['Ships travel across the Tasman Sea.']],
+['ship10','Container Ship','Cape Town ⇄ Durban',[[-33.9,18.43],[-35,24],[-29.86,31.02]],'container','#89d3ac',.0010,['Coastal shipping connects South African ports.']],
+['ship11','Cruise Ship','Honolulu ⇄ Maui',[[21.31,-157.86],[20.88,-156.46]],'cruise','#e6d46a',.0011,['Passenger ships travel between Hawaiian harbors.']]
+);
 const VSCALE={b747:.046,b747f:.046,b787:.042,a380:.05,a320:.034,heli:.026,container:.048,cruise:.046,tanker:.048,yacht:.022};
 const VALT={b747:1.06,b747f:1.06,b787:1.06,a380:1.062,a320:1.05,heli:1.022,container:1.0003,cruise:1.0003,tanker:1.0003,yacht:1.0003};
 const QUESTS=[
@@ -1125,7 +1143,7 @@ function buildPlaces(){
     else{placeOn(obj,lat,lon,s);const p0=obj.position.clone(),n=p0.clone().normalize(),ph=rand()*TAU;animators.push((dt,t)=>obj.position.copy(p0).addScaledVector(n,Math.max(0,Math.sin(t*2.2+ph))*.0012))}
     reg(item)});
   buildCities(CITIES.slice(0,44));
-  VEHICLES.forEach(([id,name,route,path,kind,col,speed,facts])=>{const obj=vehicleModel(kind,col);world.add(obj);obj.scale.setScalar(VSCALE[kind]);const item={id,cat:'vehicle',name,place:route,facts:[`Illustrative service route: ${route}. Vehicles follow geographic waypoints; this is not live transport tracking.`,...facts],stats:[['Route',route],['Mode',kind==='heli'?'Helicopter':kind.startsWith('b')||kind.startsWith('a')?'Air travel':'Sea travel']],obj,mode:'earth',ride:true};makeMover(item,path,speed,VALT[kind],kind);reg(item);if(obj.userData.rotor){const ro=obj.userData.rotor,tr=obj.userData.tail;animators.push(dt=>{ro.rotation.y+=dt*28;tr.rotation.x+=dt*40})}});
+  VEHICLES.forEach(([id,name,route,path,kind,col,speed,facts])=>{const obj=vehicleModel(kind,col);world.add(obj);obj.scale.setScalar(VSCALE[kind]);const item={id,cat:'vehicle',name,place:route,facts:[`Illustrative service route: ${route}. Vehicles follow geographic waypoints; this is not live transport tracking.`,...facts],stats:[['Route',route],['Mode',kind==='heli'?'Helicopter':kind.startsWith('b')||kind.startsWith('a')?'Air travel':'Sea travel']],obj,mode:'earth',ride:true};if(kind==='heli')makeHelicopterOrbit(item,path[path.length-1][0],path[path.length-1][1],id==='heli2'?.6:.25);else makeMover(item,path,speed,VALT[kind],kind);reg(item);if(obj.userData.rotor){const ro=obj.userData.rotor,tr=obj.userData.tail;animators.push(dt=>{ro.rotation.y+=dt*28;tr.rotation.x+=dt*40})}});
   // ISS
   const iss=G(B(.9,.03,.03,'#cfd6de',0,0,0),R(C(.045,.045,.36,'#eef1f4',0,0,0,8),Math.PI/2,0,0),R(C(.04,.04,.2,'#e2e6ea',.12,0,0,8),0,0,Math.PI/2),B(.06,.12,.004,'#f4f6f8',-.1,.1,0));
   for(const x of[-.42,-.3,.3,.42])for(const y of[-1,1])iss.add(B(.1,.004,.26,'#2c4f8a',x,0,y*.16));
@@ -1144,6 +1162,19 @@ function buildPlaces(){
 }
 function orient(obj,up,fwd){const u=up.clone().normalize(),z=fwd.clone().sub(u.clone().multiplyScalar(fwd.dot(u))).normalize(),x=new V3().crossVectors(u,z);obj.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,u,z))}
 function slerpV(a,b,t){const ang=a.angleTo(b);if(ang<1e-6)return a.clone();const s=Math.sin(ang);return a.clone().multiplyScalar(Math.sin((1-t)*ang)/s).add(b.clone().multiplyScalar(Math.sin(t*ang)/s))}
+function makeHelicopterOrbit(item,lat,lon,radius=.35){
+  const obj=item.obj,anchor=ll2v(lat,lon),east=new V3().crossVectors(UP,anchor).normalize(),northV=new V3().crossVectors(anchor,east).normalize();
+  let theta=rand()*TAU;const P=new V3(),F=new V3();
+  item.update=(dt,t)=>{
+    theta+=dt*.22;const ang=radius*DEG;
+    P.copy(anchor).multiplyScalar(Math.cos(ang)).addScaledVector(east,Math.sin(ang)*Math.cos(theta)).addScaledVector(northV,Math.sin(ang)*Math.sin(theta)).normalize();
+    F.copy(east).multiplyScalar(-Math.sin(theta)).addScaledVector(northV,Math.cos(theta)).normalize();
+    obj.position.copy(P).multiplyScalar(1.022+Math.sin(t*.7+theta)*.0005);
+    orient(obj,P,F);item.fwd=F.clone();item.up=P.clone();
+  };
+  item.routePoints=Array.from({length:64},(_,i)=>anchor.clone().multiplyScalar(Math.cos(radius*DEG)).addScaledVector(east,Math.sin(radius*DEG)*Math.cos(i/64*TAU)).addScaledVector(northV,Math.sin(radius*DEG)*Math.sin(i/64*TAU)).normalize());
+  item.routeRadius=1.022;item.update(0,0);movers.push(item);
+}
 function makeMover(item,wps,speed,r,kind){
   const stops=wps.length>2?[...wps,...wps.slice(1,-1).reverse()]:wps;
   const pts=[];for(let i=0;i<stops.length;i++){const a=ll2v(...stops[i]),b=ll2v(...stops[(i+1)%stops.length]);const st=Math.max(2,Math.ceil(a.angleTo(b)/.02));for(let s=0;s<st;s++)pts.push(slerpV(a,b,s/st))}
