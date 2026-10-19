@@ -11,5 +11,14 @@ const {chromium}=require('playwright');
  if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
  if(!state.canvas||!state.perf.frames)throw Error('No active canvas frames: '+JSON.stringify(state));
  console.log('Browser Earth smoke test passed:',JSON.stringify(state));
+ // Exercise the deferred space-loading path as well as the initial Earth render.
+ await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:30000});
+ await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',{timeout:90000});
+ await page.waitForTimeout(1500);
+ const space=await page.evaluate(()=>window.branchAdventurePerf.snapshot());
+ await page.screenshot({path:'space-smoke.png'});
+ if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
+ if(space.mode!=='space'||space.frames<1)throw Error('Space scene failed: '+JSON.stringify(space));
+ console.log('Browser Space smoke test passed:',JSON.stringify(space));
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
