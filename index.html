@@ -1001,14 +1001,14 @@ const VEHICLES=[
 ['plane5','Boeing 747 Freighter','Singapore ⇄ London',[[1.36,103.99],[51.47,-.45]],'b747f','#8a94a6',.0012,['Its nose swings open so long cargo can slide straight in.','It carries packages, medicine and fresh food around the world.']],
 ['plane6','Airbus A320','London ⇄ Rome',[[51.47,-.45],[41.8,12.25]],'a320','#7a4bd6',.0022,['One of the most common airliners in the sky.','This short trip takes about 2.5 hours.']],
 ['plane7','Airbus A320','Miami ⇄ San Juan',[[25.8,-80.3],[18.44,-66.0]],'a320','#2fb3a5',.0024,['Flights link the Caribbean islands with the mainland every day.','The trip takes about 2.5 hours.']],
-['heli1','Rescue Helicopter','Swiss Alps',circ(46.5,8.2,1.4),'heli','#e0473c',.003,['Helicopters can hover in place and even fly backwards.','Mountain rescue crews use them to reach climbers in trouble.']],
-['heli2','Tour Helicopter','Grand Canyon',circ(36.3,-112.4,1.6),'heli','#2a6fd6',.003,['Tour helicopters fly visitors over the canyon.','A helicopter’s spinning blades are called rotors.']],
-['ship1','Container Ship','North Atlantic',[[40,-60],[45,-30],[35,-25],[25,-45]],'container','#1f3f7a',.0011,['The biggest container ships carry more than 24,000 containers.','Containers come in standard sizes, so cranes anywhere can lift them.']],
-['ship2','Cruise Ship','Caribbean islands tour',[[25.6,-79.6],[25.9,-76.0],[23.8,-73.6],[21.0,-70.5],[19.0,-66.4],[18.6,-65.0],[18.0,-63.4],[16.8,-62.8],[15.8,-64.5],[16.8,-70],[17.3,-75],[19.3,-79],[21.6,-85.5],[24.2,-83.5],[25,-80.3]],'cruise','#2a6fd6',.0013,['Big cruise ships carry over 6,000 passengers.','This one hops between Caribbean islands.','Some cruise ships have water slides, theaters and even ice rinks!']],
-['ship3','Oil Tanker','Indian Ocean',[[-5,65],[-15,80],[0,90],[8,70]],'tanker','#2b3440',.001,['A supertanker can carry more than 2 million barrels of oil.','It can take several kilometers to stop!']],
-['ship4','Sailing Yacht','Mediterranean Sea',[[36,17],[34.2,25],[34.5,32],[33.6,21]],'yacht','#2a6fd6',.0013,['Sailboats use only the wind to move.','People have sailed the Mediterranean for over 5,000 years.']],
-['ship5','Container Ship','Pacific Ocean',[[30,-150],[25,-172],[12,172],[18,-140]],'container','#2f7a4f',.001,['The Pacific is the biggest ocean, larger than all the land on Earth combined.','A crossing takes about two weeks.']],
-['ship6','Sailing Yacht','Caribbean Sea',[[13.5,-64],[15.2,-66.5],[12.9,-68],[12.4,-65]],'yacht','#e0473c',.0016,['The Caribbean’s steady trade winds make it great for sailing.','Sailors zigzag back and forth to sail into the wind.']]
+['heli1','Rescue Helicopter','Geneva ⇄ Chamonix ⇄ Geneva',[[46.20,6.15],[45.92,6.87]],'heli','#e0473c',.003,['Helicopters can hover in place and even fly backwards.','Mountain rescue crews use them to reach climbers in trouble.']],
+['heli2','Tour Helicopter','Las Vegas ⇄ Grand Canyon ⇄ Las Vegas',[[36.08,-115.15],[36.05,-112.13]],'heli','#2a6fd6',.003,['Tour helicopters fly visitors over the canyon.','A helicopter’s spinning blades are called rotors.']],
+['ship1','Container Ship','New York ⇄ Rotterdam',[[40.67,-74.04],[44.0,-58.0],[49.0,-30.0],[51.92,4.48]],'container','#1f3f7a',.0011,['The biggest container ships carry more than 24,000 containers.','Containers come in standard sizes, so cranes anywhere can lift them.']],
+['ship2','Cruise Ship','Miami → Nassau → San Juan → Santo Domingo → Miami',[[25.77,-80.18],[25.08,-77.34],[18.46,-66.11],[18.43,-69.95]],'cruise','#2a6fd6',.0013,['Big cruise ships carry over 6,000 passengers.','This one hops between Caribbean islands.','Some cruise ships have water slides, theaters and even ice rinks!']],
+['ship3','Oil Tanker','Dubai ⇄ Mumbai',[[25.20,55.10],[24.2,58.5],[19.0,72.7]],'tanker','#2b3440',.001,['A supertanker can carry more than 2 million barrels of oil.','It can take several kilometers to stop!']],
+['ship4','Sailing Yacht','Athens → Santorini → Heraklion → Athens',[[37.94,23.63],[36.46,25.38],[35.33,25.14]],'yacht','#2a6fd6',.0013,['Sailboats use only the wind to move.','People have sailed the Mediterranean for over 5,000 years.']],
+['ship5','Container Ship','Shanghai ⇄ Los Angeles',[[31.23,121.6],[35,145],[39,177],[36,-150],[33.73,-118.26]],'container','#2f7a4f',.001,['The Pacific is the biggest ocean, larger than all the land on Earth combined.','A crossing takes about two weeks.']],
+['ship6','Sailing Yacht','Bridgetown → Kingstown → St. George's → Bridgetown',[[13.10,-59.61],[13.15,-61.22],[12.05,-61.75]],'yacht','#e0473c',.0016,['The Caribbean’s steady trade winds make it great for sailing.','Sailors zigzag back and forth to sail into the wind.']]
 ];
 const VSCALE={b747:.046,b747f:.046,b787:.042,a380:.05,a320:.034,heli:.026,container:.048,cruise:.046,tanker:.048,yacht:.022};
 const VALT={b747:1.06,b747f:1.06,b787:1.06,a380:1.062,a320:1.05,heli:1.022,container:1.0003,cruise:1.0003,tanker:1.0003,yacht:1.0003};
@@ -1107,7 +1107,7 @@ function buildPlaces(){
     else{placeOn(obj,lat,lon,s);const p0=obj.position.clone(),n=p0.clone().normalize(),ph=rand()*TAU;animators.push((dt,t)=>obj.position.copy(p0).addScaledVector(n,Math.max(0,Math.sin(t*2.2+ph))*.0012))}
     reg(item)});
   buildCities();
-  VEHICLES.forEach(([id,name,route,path,kind,col,speed,facts])=>{const obj=vehicleModel(kind,col);world.add(obj);obj.scale.setScalar(VSCALE[kind]);const item={id,cat:'vehicle',name,place:route,facts,obj,mode:'earth',ride:true};makeMover(item,path,speed,VALT[kind],kind);reg(item);if(obj.userData.rotor){const ro=obj.userData.rotor,tr=obj.userData.tail;animators.push(dt=>{ro.rotation.y+=dt*28;tr.rotation.x+=dt*40})}});
+  VEHICLES.forEach(([id,name,route,path,kind,col,speed,facts])=>{const obj=vehicleModel(kind,col);world.add(obj);obj.scale.setScalar(VSCALE[kind]);const item={id,cat:'vehicle',name,place:route,facts:[`Illustrative service route: ${route}. Vehicles follow geographic waypoints; this is not live transport tracking.`,...facts],stats:[['Route',route],['Mode',kind==='heli'?'Helicopter':kind.startsWith('b')||kind.startsWith('a')?'Air travel':'Sea travel']],obj,mode:'earth',ride:true};makeMover(item,path,speed,VALT[kind],kind);reg(item);if(obj.userData.rotor){const ro=obj.userData.rotor,tr=obj.userData.tail;animators.push(dt=>{ro.rotation.y+=dt*28;tr.rotation.x+=dt*40})}});
   // ISS
   const iss=G(B(.9,.03,.03,'#cfd6de',0,0,0),R(C(.045,.045,.36,'#eef1f4',0,0,0,8),Math.PI/2,0,0),R(C(.04,.04,.2,'#e2e6ea',.12,0,0,8),0,0,Math.PI/2),B(.06,.12,.004,'#f4f6f8',-.1,.1,0));
   for(const x of[-.42,-.3,.3,.42])for(const y of[-1,1])iss.add(B(.1,.004,.26,'#2c4f8a',x,0,y*.16));
@@ -1127,7 +1127,8 @@ function buildPlaces(){
 function orient(obj,up,fwd){const u=up.clone().normalize(),z=fwd.clone().sub(u.clone().multiplyScalar(fwd.dot(u))).normalize(),x=new V3().crossVectors(u,z);obj.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,u,z))}
 function slerpV(a,b,t){const ang=a.angleTo(b);if(ang<1e-6)return a.clone();const s=Math.sin(ang);return a.clone().multiplyScalar(Math.sin((1-t)*ang)/s).add(b.clone().multiplyScalar(Math.sin(t*ang)/s))}
 function makeMover(item,wps,speed,r,kind){
-  const pts=[];for(let i=0;i<wps.length;i++){const a=ll2v(...wps[i]),b=ll2v(...wps[(i+1)%wps.length]);const st=Math.max(2,Math.ceil(a.angleTo(b)/.02));for(let s=0;s<st;s++)pts.push(slerpV(a,b,s/st))}
+  const stops=wps.length>2?[...wps,...wps.slice(1,-1).reverse()]:wps;
+  const pts=[];for(let i=0;i<stops.length;i++){const a=ll2v(...stops[i]),b=ll2v(...stops[(i+1)%stops.length]);const st=Math.max(2,Math.ceil(a.angleTo(b)/.02));for(let s=0;s<st;s++)pts.push(slerpV(a,b,s/st))}
   const cum=[0];for(let i=1;i<=pts.length;i++)cum.push(cum[i-1]+pts[i-1].angleTo(pts[i%pts.length]));const total=cum[pts.length];
   let d=rand()*total;const obj=item.obj;const P=new V3(),F=new V3();
   item.update=(dt,t)=>{d=(d+dt*speed*60)%total;let lo=0,hi=pts.length-1;while(lo<hi){const m=(lo+hi+1)>>1;if(cum[m]<=d)lo=m;else hi=m-1}
