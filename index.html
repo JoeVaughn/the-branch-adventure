@@ -1649,10 +1649,11 @@ function updateCounts(){const all=countable();$('dexCount').textContent=`${all.f
 function renderDex(){const all=countable();$('dexSheet').dataset.cat=dexCat;
   $('dexTabs').innerHTML=DEXCATS.map(([c,l])=>{const xs=all.filter(i=>i.cat===c);return`<button class="tab${c===dexCat?' on':''}" data-cat="${c}" data-c="${c}" type="button">${l} <b>${xs.filter(i=>found.has(i.id)).length}/${xs.length}</b></button>`}).join('');
   const xs=all.filter(i=>i.cat===dexCat);$('dexBar').style.width=(xs.filter(i=>found.has(i.id)).length/xs.length*100)+'%';
-  $('dexGrid').innerHTML=xs.map(i=>found.has(i.id)?`<button class="cell seen" data-id="${i.id}" type="button"><b>${i.flag?i.flag+' ':''}${esc(i.name)}</b><span>${esc(i.place||'')}</span></button>`:`<div class="cell locked"><b>???</b><span>${dexCat==='country'?'Tap the land to find it':'Not found yet'}</span></div>`).join('')}
+  $('dexGrid').innerHTML=xs.map(i=>(i.cat==='biblical'||found.has(i.id))?`<button class="cell seen" data-id="${i.id}" type="button"><b>${i.flag?i.flag+' ':''}${esc(i.name)}</b><span>${esc(i.place||'')}</span></button>`:`<div class="cell locked"><b>???</b><span>${dexCat==='country'?'Tap the land to find it':'Not found yet'}</span></div>`).join('')}
 $('btnDex').onclick=()=>{renderDex();$('dex').hidden=false};$('dexClose').onclick=()=>$('dex').hidden=true;$('dex').addEventListener('click',e=>{if(e.target.id==='dex')$('dex').hidden=true});
 $('dexTabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b){dexCat=b.dataset.c;renderDex()}});
 $('dexGrid').addEventListener('click',e=>{const b=e.target.closest('.cell.seen');if(!b)return;const it=ITEMS.get(b.dataset.id);$('dex').hidden=true;openItem(it,false);
+  if(it.cat==='biblical')discover(it);
   if(it.mode==='earth'&&mode==='earth'){exitRide();if(it.lat!==undefined)flyTo(it.lat,it.lon,it.cat==='country'?.9:.25);else if(it.obj){const[la,lo]=v2ll(it.obj.position);flyTo(la,lo,.6)}}
   else if(it.mode==='space'&&mode==='space'&&it.obj)scFlyTo(it)});
 addEventListener('keydown',e=>{if(e.key==='Escape'){$('dex').hidden=true;if(ride)exitRide()}});
