@@ -430,7 +430,7 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'h
 const nativeDPR=Math.max(1,window.devicePixelRatio||1);
 const dprCeiling=Math.min(nativeDPR,HQ?2:1.25);
 const dprFloor=Math.min(dprCeiling,HQ?0.85:0.7);
-let renderDPR=Math.min(dprCeiling,HQ?1.5:1);
+let renderDPR=Math.min(dprCeiling,HQ?1.5:1),bloomSuspended=false,bloomCooldown=0;
 renderer.setPixelRatio(renderDPR);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
@@ -1301,7 +1301,11 @@ function enhanceLandmarkDesign(model,id){
   const orb=new THREE.Mesh(new THREE.SphereGeometry(.018,16,10),mat);orb.position.set(a[0],a[1],a[2]);model.add(orb);
   const phase=rand()*TAU;animators.push((dt,t)=>{const pulse=.72+.28*Math.sin(t*2.4+phase);mat.emissiveIntensity=1.1+pulse*1.5;orb.scale.setScalar(.8+pulse*.32)});
 }
+function buildCountryProfiles(){
+  COUNTRIES.forEach(([name,flag,lat,lon,r,cap,hello,fact])=>{const id='c-'+name.toLowerCase().replace(/[^a-z]+/g,'-');reg({id,cat:'country',name,flag,place:'Country',lat,lon,r,stats:[['Capital',cap],['Say hello',hello]],facts:[fact,...(COUNTRY_ECONOMY[name]?[`Examples of goods exported: ${COUNTRY_ECONOMY[name].exports}.`,`Natural resources and productive strengths: ${COUNTRY_ECONOMY[name].resources}.`,'Export examples are educational, not a live ranking. Trade patterns can change; see World Bank WITS for updated statistics.']:[])],mode:'earth'})});
+}
 function buildPlaces(){
+  buildCountryProfiles();
   LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id]();enhanceLandmarkDesign(model,id);const natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
     reg({id,cat:'landmark',name,place,facts,lat,lon,obj,mode:'earth',natural,footR:(obj.userData.footR||.6)*s,stats:natural?[['Type','Natural wonder']]:YEARS[id]?[['Built',YEARS[id]]]:null});
     if(obj.userData.spin)animators.push(dt=>obj.userData.spin.forEach(h=>h.rotation.z+=dt*1.6));
@@ -1523,7 +1527,7 @@ function buildTrees(){
     if(pine){pines.setMatrixAt(np,M);c.setHSL(.36+rand()*.04,.42,.28+rand()*.08);pines.setColorAt(np++,lin(c))}else{rounds.setMatrixAt(nr,M);c.setHSL(.27+rand()*.08,.5,.36+rand()*.12);rounds.setColorAt(nr++,lin(c))}}
   trunks.count=nt;pines.count=np;rounds.count=nr;[pines,rounds].forEach(m=>{if(m.instanceColor)m.instanceColor.needsUpdate=true});world.add(trunks,pines,rounds);
   // countries
-  COUNTRIES.forEach(([name,flag,lat,lon,r,cap,hello,fact])=>{const id='c-'+name.toLowerCase().replace(/[^a-z]+/g,'-');reg({id,cat:'country',name,flag,place:'Country',lat,lon,r,stats:[['Capital',cap],['Say hello',hello]],facts:[fact,...(COUNTRY_ECONOMY[name]?[`Examples of goods exported: ${COUNTRY_ECONOMY[name].exports}.`,`Natural resources and productive strengths: ${COUNTRY_ECONOMY[name].resources}.`,'Export examples are educational, not a live ranking. Trade patterns can change; see World Bank WITS for updated statistics.']:[])],mode:'earth'})});
+
 }
 
 /* ================= SPACE ================= */
@@ -1957,7 +1961,7 @@ function drawWarp(dt){wc.style.opacity=warpAmt.toFixed(2);if(warpAmt<.02)return;
   streaks.forEach(s=>{s.r+=dt*s.s*(1+warpAmt*3);if(s.r>1)s.r=.05;const r0=s.r*R,r1=r0+(20+warpAmt*160)*s.r;wx.strokeStyle=`rgba(200,220,255,${(s.r*.8).toFixed(2)})`;wx.lineWidth=1+s.r*2;wx.beginPath();wx.moveTo(cx+Math.cos(s.a)*r0,cy+Math.sin(s.a)*r0);wx.lineTo(cx+Math.cos(s.a)*r1,cy+Math.sin(s.a)*r1);wx.stroke()})}
 
 /* ================= MAIN LOOP ================= */
-function setupComposer(){if(!HQ||!THREE.EffectComposer||!THREE.UnrealBloomPass)return;try{composer=new THREE.EffectComposer(renderer);if(composer.setPixelRatio)composer.setPixelRatio(renderDPR);composer.addPass(new THREE.RenderPass(spaceScene,scam));composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.55,.35,.94));composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader))}catch(e){console.warn(e);composer=null}}
+function setupComposer(){if(!HQ||!THREE.EffectComposer||!THREE.UnrealBloomPass)return;try{composer=new THREE.EffectComposer(renderer);if(composer.setPixelRatio)composer.setPixelRatio(renderDPR);composer.addPass(new THREE.RenderPass(spaceScene,scam));const bloom=new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),.55,.35,.94);const sizeBloom=bloom.setSize.bind(bloom);bloom.setSize=(w,h)=>sizeBloom(Math.max(1,w*.5|0),Math.max(1,h*.5|0));composer.addPass(bloom);composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader))}catch(e){console.warn(e);composer=null}}
 function applyRenderDPR(next){
   next=Math.max(dprFloor,Math.min(dprCeiling,Math.round(next*20)/20));
   if(Math.abs(next-renderDPR)<0.025)return;
@@ -1992,23 +1996,26 @@ function updateEarth(dt,t){
 }
 const clock=new THREE.Clock();let T=0,rafId=0,frameSample=0,frameSeconds=0,adjustCooldown=0;
 const PERF_START=performance.now();const perfStats={fps:0,dpr:renderDPR,frames:0,drawCalls:0,triangles:0,bootMs:0,spaceReadyMs:0,countryBordersMs:0,stateBordersMs:0};
-window.branchAdventurePerf=Object.freeze({snapshot:()=>({...perfStats,mode,quality,visualVersion:'cinematic-v2',weather:!!weatherLayer,textureCount:renderer.info.memory.textures,geometryCount:renderer.info.memory.geometries})});
+window.branchAdventurePerf=Object.freeze({snapshot:()=>({...perfStats,mode,quality,visualVersion:'cinematic-v2',weather:!!weatherLayer,bloomEnabled:!!composer&&!bloomSuspended,cameraMoving:!!SC.fly,textureCount:renderer.info.memory.textures,geometryCount:renderer.info.memory.geometries})});
 function loop(){
   if(document.hidden){rafId=0;return}
   rafId=requestAnimationFrame(loop);
   const rawDT=clock.getDelta(),dt=Math.min(rawDT,.05);T+=dt;
   // Adapt slowly to sustained load; never alter geometry, simulation speed or user quality preference.
-  if(rawDT>0&&rawDT<0.25){
+  if(rawDT>0){
     frameSeconds+=rawDT;frameSample++;
     adjustCooldown=Math.max(0,adjustCooldown-rawDT);
-    if(frameSample>=90&&frameSeconds>=1.5){
+    if(frameSample>=6&&frameSeconds>=2.5){
       const fps=frameSample/frameSeconds;perfStats.fps=Math.round(fps);
+      bloomCooldown=Math.max(0,bloomCooldown-frameSeconds);
+      if(fps<20&&!bloomSuspended){bloomSuspended=true;bloomCooldown=30}
+      else if(bloomSuspended&&!bloomCooldown&&fps>58&&renderDPR>=dprCeiling){bloomSuspended=false;bloomCooldown=30}
       if(!adjustCooldown&&fps<47&&renderDPR>dprFloor){applyRenderDPR(renderDPR-0.15);adjustCooldown=3}
       else if(!adjustCooldown&&fps>58&&renderDPR<dprCeiling){applyRenderDPR(renderDPR+0.05);adjustCooldown=5}
       frameSeconds=0;frameSample=0;
     }
   }
-  if(mode==='earth'){updateEarth(dt,T);renderer.render(earthScene,camera)}else{spaceUpdate(dt,T);spaceCamUpdate(dt);if(composer)composer.render(dt);else renderer.render(spaceScene,scam)}
+  if(mode==='earth'){updateEarth(dt,T);renderer.render(earthScene,camera)}else{spaceUpdate(dt,T);spaceCamUpdate(Math.min(rawDT,.25));if(composer&&!bloomSuspended)composer.render(dt);else renderer.render(spaceScene,scam)}
   perfStats.dpr=renderDPR;perfStats.frames++;perfStats.drawCalls=renderer.info.render.calls;perfStats.triangles=renderer.info.render.triangles;
   updateLabels();drawWarp(dt)}
 document.addEventListener('visibilitychange',()=>{
