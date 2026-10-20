@@ -1186,6 +1186,53 @@ function buildBiblicalAtlas(){
   }
 }
 const US_STATES=[["Alabama","AL","Montgomery",32.3777,-86.3006,"The Gulf Coast and Appalachian foothills make Alabama's landscapes diverse."],["Alaska","AK","Juneau",58.3019,-134.4197,"Denali is North America's highest mountain; Alaska also has enormous glaciers."],["Arizona","AZ","Phoenix",33.4484,-112.074,"The Grand Canyon reveals nearly two billion years of geological history."],["Arkansas","AR","Little Rock",34.7465,-92.2896,"The Ozark and Ouachita Mountains are known for forests and rivers."],["California","CA","Sacramento",38.5767,-121.4934,"California includes the Sierra Nevada, giant sequoias, and Death Valley."],["Colorado","CO","Denver",39.7392,-104.9903,"Colorado has dozens of Rocky Mountain peaks above 14,000 feet."],["Connecticut","CT","Hartford",41.7658,-72.6734,"The Connecticut River shapes one of New England's major valleys."],["Delaware","DE","Dover",39.1582,-75.5244,"Delaware was the first state to ratify the U.S. Constitution."],["Florida","FL","Tallahassee",30.4383,-84.2807,"The Everglades protect wetlands, alligators, manatees, and many birds."],["Georgia","GA","Atlanta",33.749,-84.388,"Georgia stretches from the Blue Ridge Mountains to Atlantic marshlands."],["Hawaii","HI","Honolulu",21.3099,-157.8581,"Hawaiʻi's volcanic islands formed above a hotspot in the Pacific Plate."],["Idaho","ID","Boise",43.615,-116.2023,"Idaho contains the Snake River Plain and rugged Sawtooth Mountains."],["Illinois","IL","Springfield",39.7817,-89.6501,"Illinois combines rich prairie farmland with the shores of Lake Michigan."],["Indiana","IN","Indianapolis",39.7684,-86.1581,"Indiana's dunes along Lake Michigan protect unusual sand and wetland habitats."],["Iowa","IA","Des Moines",41.5868,-93.625,"Iowa's fertile prairie soils make it a major corn and soybean producer."],["Kansas","KS","Topeka",39.0473,-95.6752,"Kansas lies in the Great Plains, known for grasslands and agriculture."],["Kentucky","KY","Frankfort",38.2009,-84.8733,"Mammoth Cave is part of the world's longest known cave system."],["Louisiana","LA","Baton Rouge",30.4515,-91.1871,"The Mississippi River delta supports important wetlands and wildlife."],["Maine","ME","Augusta",44.3106,-69.7795,"Maine's rocky coast and Acadia National Park are shaped by glaciers."],["Maryland","MD","Annapolis",38.9784,-76.4922,"The Chesapeake Bay is North America's largest estuary."],["Massachusetts","MA","Boston",42.3601,-71.0589,"Massachusetts is known for its Atlantic coast and early American history."],["Michigan","MI","Lansing",42.7325,-84.5555,"Michigan touches four Great Lakes and has two large peninsulas."],["Minnesota","MN","Saint Paul",44.9537,-93.09,"Minnesota is known for thousands of lakes and the Mississippi River headwaters."],["Mississippi","MS","Jackson",32.2988,-90.1848,"The Mississippi Delta is a major alluvial plain with a rich musical heritage."],["Missouri","MO","Jefferson City",38.5767,-92.1735,"The Missouri and Mississippi rivers meet near Saint Louis."],["Montana","MT","Helena",46.5884,-112.0245,"Glacier National Park preserves dramatic peaks and alpine wildlife."],["Nebraska","NE","Lincoln",40.8136,-96.7026,"The Sandhills are one of the world's largest grass-stabilized dune regions."],["Nevada","NV","Carson City",39.1638,-119.7674,"Nevada has vast desert basins, mountain ranges, and Lake Tahoe."],["New Hampshire","NH","Concord",43.2081,-71.5376,"The White Mountains include Mount Washington, known for severe weather."],["New Jersey","NJ","Trenton",40.2206,-74.7597,"New Jersey has Atlantic barrier islands and the Pine Barrens ecosystem."],["New Mexico","NM","Santa Fe",35.687,-105.9378,"New Mexico combines high deserts, volcanic terrain, and ancient Pueblo history."],["New York","NY","Albany",42.6526,-73.7562,"The Adirondacks and Niagara Falls are major natural landmarks."],["North Carolina","NC","Raleigh",35.7796,-78.6382,"North Carolina runs from Appalachian peaks to Outer Banks barrier islands."],["North Dakota","ND","Bismarck",46.8083,-100.7837,"Theodore Roosevelt National Park preserves North Dakota badlands."],["Ohio","OH","Columbus",39.9612,-82.9988,"Lake Erie, forests, and glacial plains shape Ohio's geography."],["Oklahoma","OK","Oklahoma City",35.4676,-97.5164,"Oklahoma includes prairie, forests, and portions of the ancient Wichita Mountains."],["Oregon","OR","Salem",44.9429,-123.0351,"Oregon's Cascade volcanoes include Mount Hood and Crater Lake."],["Pennsylvania","PA","Harrisburg",40.2732,-76.8867,"Pennsylvania's Appalachian ridges are rich in forests and waterways."],["Rhode Island","RI","Providence",41.824,-71.4128,"Rhode Island is the smallest state and has a deeply indented coastline."],["South Carolina","SC","Columbia",34.0007,-81.0348,"South Carolina includes Atlantic marshes and the Blue Ridge foothills."],["South Dakota","SD","Pierre",44.3683,-100.351,"The Black Hills and Badlands reveal contrasting mountain and prairie landscapes."],["Tennessee","TN","Nashville",36.1627,-86.7816,"Great Smoky Mountains National Park is famous for biodiversity."],["Texas","TX","Austin",30.2672,-97.7431,"Texas spans Gulf Coast marshes, plains, deserts, and the Guadalupe Mountains."],["Utah","UT","Salt Lake City",40.7608,-111.891,"Utah's red-rock arches, canyons, and Great Salt Lake are geological landmarks."],["Vermont","VT","Montpelier",44.2601,-72.5754,"The Green Mountains give Vermont its name and forested character."],["Virginia","VA","Richmond",37.5407,-77.436,"Virginia stretches from the Blue Ridge Mountains to the Chesapeake Bay."],["Washington","WA","Olympia",47.0379,-122.9007,"Washington includes Mount Rainier, temperate rainforests, and Puget Sound."],["West Virginia","WV","Charleston",38.3498,-81.6326,"The New River Gorge and Appalachians define much of the state's terrain."],["Wisconsin","WI","Madison",43.0731,-89.4012,"Glaciers carved Wisconsin's lakes and left distinctive landforms."],["Wyoming","WY","Cheyenne",41.14,-104.8202,"Yellowstone features geysers, hot springs, and abundant wildlife."]];
+
+let stateMarkerGroup=null,stateBorderLines=null;
+function buildUSStates(){
+  stateMarkerGroup=new THREE.Group();stateMarkerGroup.name='US state capitals';world.add(stateMarkerGroup);
+  const geometry=new THREE.OctahedronGeometry(.38,0);
+  const material=new THREE.MeshStandardMaterial({color:0x8ee9ff,emissive:0x1b7594,emissiveIntensity:.5,metalness:.28,roughness:.38});
+  for(const [name,postal,capital,lat,lon,fact] of US_STATES){
+    const mesh=new THREE.Mesh(geometry,material);
+    const item=reg({id:'state-'+postal.toLowerCase(),cat:'state',name,place:'United States',lat,lon,obj:mesh,mode:'earth',
+      stats:[['Capital',capital],['Postal abbreviation',postal],['Country','United States']],
+      facts:[fact,'Explore the surrounding terrain, cities, and landmarks to learn more about this state.']});
+    // Pins mark state capitals; state boundaries are loaded separately from Census-derived topology.
+    placeOn(mesh,lat,lon,.012,{r:1.011,lift:.003,yaw:0});
+    stateMarkerGroup.add(mesh);
+  }
+  // U.S. Atlas v3, derived from U.S. Census Bureau cartographic boundaries.
+  // Request after the first frame and never block gameplay if the network is unavailable.
+  setTimeout(()=>fetch('https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json')
+    .then(r=>{if(!r.ok)throw Error('US Atlas HTTP '+r.status);return r.json()})
+    .then(drawUSStateBoundaries)
+    .catch(e=>console.warn('State borders unavailable',e)),2200);
+}
+function drawUSStateBoundaries(topology){
+  if(!topology||!topology.objects||!topology.objects.states||!topology.transform)return;
+  const allowed=new Set(US_STATES.map(r=>r[0]));
+  const arcs=new Set(),stateGeometries=topology.objects.states.geometries||[];
+  function collect(value){if(typeof value==='number'){arcs.add(value<0?~value:value);return}
+    if(Array.isArray(value))for(const child of value)collect(child)}
+  for(const state of stateGeometries)if(allowed.has(state.properties&&state.properties.name))collect(state.arcs);
+  const {scale,translate}=topology.transform,positions=[],v=new V3();
+  for(const index of arcs){
+    const arc=topology.arcs[index];if(!arc)continue;let x=0,y=0,prev=null;
+    for(const step of arc){
+      x+=step[0];y+=step[1];
+      const lon=x*scale[0]+translate[0],lat=y*scale[1]+translate[1];
+      v.copy(ll2v(lat,lon));const r=Math.max(1.008,terrain(v).r+.006);
+      const here=v.multiplyScalar(r).clone();
+      if(prev){positions.push(prev.x,prev.y,prev.z,here.x,here.y,here.z)}
+      prev=here;
+    }
+  }
+  if(!positions.length)return;
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  stateBorderLines=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0x9eeaff,transparent:true,opacity:.72,depthWrite:false}));
+  stateBorderLines.name='US Census-derived state borders';stateBorderLines.frustumCulled=false;
+  world.add(stateBorderLines);window.branchUSStates={states:US_STATES.length,boundaries:true,segments:positions.length/6};
+}
 function buildPlaces(){
   LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id](),natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
     reg({id,cat:'landmark',name,place,facts,lat,lon,obj,mode:'earth',natural,footR:(obj.userData.footR||.6)*s,stats:natural?[['Type','Natural wonder']]:YEARS[id]?[['Built',YEARS[id]]]:null});
@@ -1602,7 +1649,7 @@ function clickAt(x,y){if(launchState)return;const r=pickAt(x,y);if(!r)return;
 function nearestCountry(la,lo){const p=ll2v(la,lo);let best=null,bs=1e9;for(const it of ITEMS.values()){if(it.cat!=='country')continue;const d=p.angleTo(ll2v(it.lat,it.lon))/DEG/it.r;if(d<bs){bs=d;best=it}}return bs<1.6?best:null}
 function ping(){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const CATN={landmark:'Wonder',animal:'Animal',country:'Country',city:'City',vehicle:'Vehicle',space:'Space',island:'Island',biblical:'Biblical site'};
+const CATN={landmark:'Wonder',animal:'Animal',country:'Country',city:'City',vehicle:'Vehicle',space:'Space',island:'Island',biblical:'Biblical site',state:'U.S. State'};
 const SKIND={iss:'Spacecraft',voyager:'Spacecraft',sun:'Star',moon:'Moon',io:'Moon',europa:'Moon',titan:'Moon',pluto:'Dwarf planet',belt:'Asteroids',comet:'Comet'};
 function catName(it){if(it.cat==='landmark')return it.natural?'Natural wonder':'Wonder';if(it.cat==='space')return SKIND[it.id]||(it.far?'Deep space':'Planet');return CATN[it.cat]}
 
@@ -1642,10 +1689,10 @@ $('qHint').onclick=()=>{const q=QUESTS[questIdx];if(!q)return;const it=ITEMS.get
   else if(it.id==='iss'){toast('Hint','Look up! It orbits above the clouds');if(mode==='earth')flyTo(EC.tLat,EC.tLon,3.2)}
   else{if(mode!=='earth'){toast('Hint','It’s back on Earth');return}const la=it.lat??v2ll(it.obj.position)[0],lo=it.lon??v2ll(it.obj.position)[1];flyTo(la+(rand()-.5)*10,lo+(rand()-.5)*14,1.1);toast('Hint','Look around here…')}};
 let toastT;function toast(ey,name){$('toastEy').textContent=ey;$('toastName').textContent=name;const t=$('toast');t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
-const DEXCATS=[['landmark','Wonders'],['animal','Animals'],['country','Countries'],['island','Islands'],['city','Cities'],['biblical','Biblical Atlas'],['space','Space']];let dexCat='landmark';
+const DEXCATS=[['landmark','Wonders'],['animal','Animals'],['country','Countries'],['island','Islands'],['city','Cities'],['biblical','Biblical Atlas'],['state','U.S. States'],['space','Space']];let dexCat='landmark';
 function countable(){return[...ITEMS.values()].filter(i=>i.cat!=='vehicle')}
 function updateCounts(){const all=countable();$('dexCount').textContent=`${all.filter(i=>found.has(i.id)).length}/${all.length}`;
-  const n=c=>all.filter(i=>i.cat===c).length;$('stats').textContent=`${n('landmark')} wonders · ${n('country')} countries · ${n('island')} islands · ${n('city')} cities · ${n('animal')} animals · ${n('biblical')} biblical sites · ${n('space')} space stops`;
+  const n=c=>all.filter(i=>i.cat===c).length;$('stats').textContent=`${n('landmark')} wonders · ${n('country')} countries · ${n('island')} islands · ${n('city')} cities · ${n('animal')} animals · ${n('biblical')} biblical sites · ${n('state')} states · ${n('space')} space stops`;
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('seen',found.has(b.dataset.id)))}
 function renderDex(){const all=countable();$('dexSheet').dataset.cat=dexCat;
   $('dexTabs').innerHTML=DEXCATS.map(([c,l])=>{const xs=all.filter(i=>i.cat===c);return`<button class="tab${c===dexCat?' on':''}" data-cat="${c}" data-c="${c}" type="button">${l} <b>${xs.filter(i=>found.has(i.id)).length}/${xs.length}</b></button>`}).join('');
@@ -1794,6 +1841,8 @@ function updateEarth(dt,t){
   const s=ride?.35:launchState?.4:clamp(EC.alt*.62+.08,.12,1.15);sunL.position.copy(shadowCenter).addScaledVector(Ld,3);
   if(world.userData.atmosphere)world.userData.atmosphere.material.uniforms.uLight.value.copy(Ld);sunL.target.position.copy(shadowCenter);sunL.target.updateMatrixWorld();
   const sc=sunL.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.updateProjectionMatrix()}
+  if(stateMarkerGroup)stateMarkerGroup.visible=mode==='earth'&&!launchState&&EC.alt<1.15;
+  if(stateBorderLines)stateBorderLines.visible=mode==='earth'&&!launchState&&EC.alt<2.1;
   // cull far side
   const cd=camera.position.clone().normalize(),hor=1/camera.position.length()-.2;
   for(const o of pickables){const p=o.position;if(!p)continue;const l=p.length();if(l<.5)continue;o.visible=p.dot(cd)/l>hor}
@@ -1830,7 +1879,7 @@ document.addEventListener('visibilitychange',()=>{
 async function boot(){
   await wait(30);paintMaps();$('loadMsg').textContent='Raising mountains…';await wait(20);
   buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
-  buildPlaces();buildBiblicalAtlas();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
+  buildPlaces();buildBiblicalAtlas();buildUSStates();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   // First interactive scene before decorative terrain instancing.
   if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
   // Yield to the compositor, then add distant decorative detail progressively.
