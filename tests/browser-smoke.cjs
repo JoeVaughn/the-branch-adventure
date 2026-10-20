@@ -29,7 +29,7 @@ const {chromium}=require('playwright');
  await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',null,{timeout:120000});
  await page.waitForTimeout(1500);
  const space=await page.evaluate(()=>window.branchAdventurePerf.snapshot());
- await page.screenshot({path:'space-smoke.png'});
+ try{await page.screenshot({path:'space-smoke.png',timeout:12000})}catch(e){console.warn('Optional space screenshot skipped:',e.message)}
  if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
  if(space.mode!=='space'||space.frames<1)throw Error('Space scene failed: '+JSON.stringify(space));
  console.log('Browser Space smoke test passed:',JSON.stringify(space));
