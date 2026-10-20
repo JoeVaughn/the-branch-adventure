@@ -3,7 +3,7 @@ const html=fs.readFileSync('index.html','utf8');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert(scripts.length>0,'No inline scripts found');
 for(const [index,script] of scripts.entries())new vm.Script(script[1],{filename:'inline-'+index+'.js'});
-for(const token of ['function buildEarth()','function buildAtmosphere()','function buildSpace()','function applyRenderDPR(','visibilitychange','window.branchAdventurePerf','buildPlaces();buildBiblicalAtlas();buildUSStates();buildIslands();buildGroundTraffic();buildLabels();','spacePromise=new Promise'])assert(html.includes(token),'Missing '+token);
+for(const token of ['function buildEarth()','function buildAtmosphere()','function buildSpace()','function applyRenderDPR(','visibilitychange','window.branchAdventurePerf','buildPlaces();buildBiblicalAtlas();buildUSStates();loadCountryBorders();buildIslands();buildGroundTraffic();buildLabels();','spacePromise=new Promise'])assert(html.includes(token),'Missing '+token);
 console.log('PASS: inline JS syntax and critical feature presence ('+scripts.length+' scripts)');
 const match=html.match(/const COUNTRY_ECONOMY=(\{[^\n]+\});/);
 assert(match,'Country economy dataset missing');
@@ -33,3 +33,11 @@ assert.equal(new Set(stateRows.map(s=>s[1])).size,50,'State abbreviations must b
 for(const row of stateRows)assert(row.length===6 && row[2] && Number.isFinite(row[3]) && Number.isFinite(row[4]) && row[5],'Invalid state profile '+row[0]);
 for(const token of ['function drawUSStateBoundaries(topology)','states-10m.json',"['state','U.S. States']",'US Census-derived state borders'])assert(html.includes(token),'Missing state atlas feature: '+token);
 console.log('PASS: 50 U.S. capitals, facts, and Census-derived boundary renderer');
+
+for(const token of ['world-atlas@2/countries-','function updateMilestone()','function milestoneReached(','const WORLD_EXPERIENCES=','function startExperience(it)','function experienceUpdate(dt)',"Amazon Sky Journey","Nile Expedition","Volcano & City Flyover",'function enhanceLandmarkDesign(model,id)','countryBordersMs','spaceReadyMs'])assert(html.includes(token),'Missing world polish feature '+token);
+assert(html.includes('const W=HQ?256:64,H=HQ?1024:256'),'HQ building window texture resolution missing');
+assert(html.includes('const S=HQ?256:64,N=HQ?8:4'),'HQ city facade texture resolution missing');
+console.log('PASS: HQ textures, global borders, milestones, guided adventures and load telemetry');
+
+for(const token of ['const LANDMARK_EXPERIENCES=','Grand Canyon Rim Flight','Great Barrier Reef Glide','Aurora Chase'])assert(html.includes(token),'Missing landmark adventure '+token);
+console.log('PASS: landmark-specific animated exploration experiences');

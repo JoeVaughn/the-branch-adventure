@@ -63,6 +63,13 @@ button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 .quest .qc{font-size:13.5px;line-height:1.35;font-weight:700;min-width:0}
 .quest .qh{font-family:var(--f-display);font-weight:600;font-size:12px;padding:6px 11px;border-radius:999px;background:rgba(95,224,181,.16);color:var(--mint);border:1px solid rgba(95,224,181,.35)}
 .quest .qh:hover{background:rgba(95,224,181,.28)}
+.milestone{grid-column:1/-1;margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.09)}
+.msrow{display:flex;justify-content:space-between;gap:10px;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.msbar{height:5px;margin-top:5px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}
+.msbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),#8edcff);box-shadow:0 0 10px rgba(95,224,181,.45);transition:width .45s ease}
+.exp-hud{position:fixed;left:50%;bottom:max(22px,calc(env(safe-area-inset-bottom,0px) + 22px));transform:translateX(-50%);z-index:30;width:min(560px,calc(100vw - 28px));background:rgba(7,14,32,.9);border:1px solid rgba(127,231,255,.35);border-radius:18px;padding:10px 12px;box-shadow:0 10px 32px rgba(0,0,0,.48),0 0 26px rgba(73,194,255,.13);backdrop-filter:blur(10px);display:grid;grid-template-columns:1fr auto;gap:5px 10px}
+.exp-hud b{font-family:var(--f-display);color:#c9faff;letter-spacing:.045em}.exp-hud small{grid-column:1/-1;color:var(--muted);line-height:1.35}.exp-hud .expbar{grid-column:1/-1;height:5px;background:rgba(255,255,255,.09);border-radius:10px;overflow:hidden}.exp-hud .expbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#66f5d0,#58bfff);transition:width .18s linear}.exp-hud button{grid-row:1/3;grid-column:2;font-size:11px;padding:6px 9px}
+
 .pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-display);font-weight:600;font-size:14px;padding:9px 15px;border-radius:999px;background:var(--panel);border:1px solid var(--line);box-shadow:0 3px 0 rgba(0,0,0,.45);transition:transform .12s ease,background .12s}
 .pill:hover{background:var(--panel-2);transform:translateY(-1px)}
@@ -220,7 +227,7 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
     <div class="quest" id="quest">
       <div class="qe" id="qEyebrow">Quest</div>
       <div class="qc" id="qClue"></div>
-      <button class="qh" id="qHint" type="button">Hint</button>
+      <button class="qh" id="qHint" type="button">Hint</button><div class="milestone" id="milestone"><div class="msrow"><span id="msLabel">Discovery goal</span><b id="msCount">0 / 5</b></div><div class="msbar"><i id="msBar"></i></div></div>
     </div>
   </div>
   <nav class="pills">
@@ -257,6 +264,7 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
 <div class="tip" id="tip" hidden></div>
 <div class="splash" id="splash" hidden role="status"><div class="sp-ey" id="spEy">Wonder discovered</div><div class="sp-name" id="spName"></div><div class="sp-meta" id="spMeta"></div><p class="sp-quote" id="spQuote"></p></div>
 <div class="count" id="count" hidden aria-live="assertive"><div class="ct-ring"><svg viewBox="0 0 120 120"><circle class="ct-bg" cx="60" cy="60" r="52"/><circle class="ct-fg" id="ctArc" cx="60" cy="60" r="52"/></svg><span id="ctNum">10</span></div><div class="ct-msg" id="ctMsg">All systems go</div><button class="act" id="ctSkip" type="button">Skip countdown</button></div>
+<div class="exp-hud" id="expHud" hidden><div><b id="expName">World Adventure</b><small id="expFact"></small></div><button class="act" id="expSkip" type="button">End tour</button><div class="expbar"><i id="expBar"></i></div></div>
 <div class="toast" id="toast"><small id="toastEy">New discovery</small><b id="toastName"></b></div>
 
 <div class="modal" id="dex" hidden>
@@ -438,7 +446,7 @@ const world=new THREE.Group();earthScene.add(world);
 
 /* ================= MATERIAL / PRIMITIVE KIT ================= */
 const matCache=new Map();
-const DN_MODEL=new THREE.Vector3(9,31,.12);
+const DN_MODEL=new THREE.Vector3(HQ?16:9,HQ?58:31,HQ?.18:.12);
 function mat(c,o){const k=c+(o?JSON.stringify(o):'');let m=matCache.get(k);if(!m){const p=Object.assign({},o||{}),flat=!!p.flat;delete p.flat;m=new THREE.MeshStandardMaterial(Object.assign({color:LC(c),roughness:.6,metalness:0,flatShading:flat},p));if(HQ&&!p.transparent)detailNoise(m,DN_MODEL);matCache.set(k,m)}return m}
 function mesh(geo,c,x=0,y=0,z=0,o){const t=geo.type,pr=geo.parameters||{},flat=t==='IcosahedronGeometry'||t==='DodecahedronGeometry'||((t==='ConeGeometry'||t==='CylinderGeometry')&&pr.radialSegments<=6);const m=new THREE.Mesh(geo,mat(c,flat?Object.assign({flat:true},o||{}):o));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;return m}
 const B=(w,h,d,c,x,y,z)=>mesh(new THREE.BoxGeometry(w,h,d),c,x,y,z);
@@ -446,8 +454,8 @@ const segUp=s=>HQ&&s>=7?Math.min(64,Math.max(24,s*2)):s;
 const C=(rt,rb,h,c,x,y,z,s=8)=>mesh(new THREE.CylinderGeometry(rt,rb,h,segUp(s)),c,x,y,z);
 const K=(r,h,c,x,y,z,s=8)=>mesh(new THREE.ConeGeometry(r,h,segUp(s)),c,x,y,z);
 const S=(r,c,x,y,z,ws=8,hs=6)=>mesh(new THREE.SphereGeometry(r,HQ?(ws<=6?14:Math.min(48,ws*3)):ws,HQ?(ws<=6?10:Math.min(32,hs*3)):hs),c,x,y,z);
-const WINTEX={};function winTex(rows){if(WINTEX[rows])return WINTEX[rows];const cv=document.createElement('canvas');cv.width=64;cv.height=256;const x=cv.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,64,256);const rh=256/rows;
-  for(let r=0;r<rows;r++)for(let k=0;k<4;k++){const lit=rand()<.12;x.fillStyle=lit?'#fff3c8':`rgb(${140+rand()*30|0},${165+rand()*30|0},${200+rand()*35|0})`;x.fillRect(4+k*15,r*rh+rh*.22,11,rh*.56)}return WINTEX[rows]=ctex(cv)}
+const WINTEX={};function winTex(rows){if(WINTEX[rows])return WINTEX[rows];const W=HQ?256:64,H=HQ?1024:256,cols=HQ?8:4,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');x.fillStyle='#f5f7fa';x.fillRect(0,0,W,H);const rh=H/rows,cw=W/cols;
+  for(let r=0;r<rows;r++)for(let k=0;k<cols;k++){const lit=rand()<.14;x.fillStyle=lit?'#fff1b2':`rgb(${128+rand()*34|0},${154+rand()*36|0},${188+rand()*42|0})`;x.fillRect(k*cw+cw*.18,r*rh+rh*.18,cw*.64,rh*.58);if(HQ){x.fillStyle='rgba(20,35,55,.22)';x.fillRect(k*cw+cw*.12,r*rh+rh*.82,cw*.76,Math.max(1,rh*.05))}}const t=ctex(cv);t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;return WINTEX[rows]=t}
 function tower(w,h,c,x,z){const rows=h>.7?24:h>.4?14:7,key='tw'+c+rows;let m=matCache.get(key);if(!m){m=new THREE.MeshStandardMaterial({color:LC(c),map:winTex(rows),roughness:.3,metalness:.3});matCache.set(key,m)}
   const roof=mat(c),me=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),[m,m,roof,roof,m,m]);me.position.set(x,h/2,z);me.castShadow=me.receiveShadow=true;return me}
 const D=(r,c,x,y,z,det=0)=>mesh(new THREE.IcosahedronGeometry(r,det),c,x,y,z);
@@ -1081,7 +1089,7 @@ function noShadow(o){o.traverse(m=>{if(m.isMesh){m.castShadow=false}})}
 
 function buildEarth(){
   // land
-  const LW=HQ?480:288,LH=LW/2,geo=new THREE.SphereGeometry(1,LW,LH),pos=geo.attributes.position,cnt=pos.count,col=new Float32Array(cnt*3),v=new V3();
+  const LW=HQ?560:288,LH=LW/2,geo=new THREE.SphereGeometry(1,LW,LH),pos=geo.attributes.position,cnt=pos.count,col=new Float32Array(cnt*3),v=new V3();
   const c=new THREE.Color(),SAND=new THREE.Color('#f0dca0'),ROCK=new THREE.Color('#a39a86'),SNOW=new THREE.Color('#fbfdff'),SH=new THREE.Color('#9fe3cf'),SD=new THREE.Color('#2a6f9e');
   for(let i=0;i<cnt;i++){v.fromBufferAttribute(pos,i).normalize();const t=terrain(v);pos.setXYZ(i,v.x*t.r,v.y*t.r,v.z*t.r);
     if(t.m<.5){c.copy(SH).lerp(SD,smooth(0,.7,1-t.m*2))}
@@ -1094,7 +1102,7 @@ function buildEarth(){
   const lm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:HQ?.88:.97,metalness:0,envMapIntensity:HQ?.9:.5,dithering:true});if(HQ)detailNoise(lm,new THREE.Vector3(240,900,.22));
   landMesh=new THREE.Mesh(geo,lm);landMesh.receiveShadow=true;landMesh.castShadow=HQ;world.add(landMesh);
   // water
-  const WS=HQ?384:240,wg=new THREE.SphereGeometry(1,WS,WS/2),wp=wg.attributes.position,wc=new Float32Array(wp.count*3),DEEP=new THREE.Color('#1c5cab'),MID=new THREE.Color('#2a8ad0'),SHAL=new THREE.Color('#47cbe0'),FOAM=new THREE.Color('#d2f7ef');
+  const WS=HQ?448:240,wg=new THREE.SphereGeometry(1,WS,WS/2),wp=wg.attributes.position,wc=new Float32Array(wp.count*3),DEEP=new THREE.Color('#1c5cab'),MID=new THREE.Color('#2a8ad0'),SHAL=new THREE.Color('#47cbe0'),FOAM=new THREE.Color('#d2f7ef');
   for(let i=0;i<wp.count;i++){v.fromBufferAttribute(wp,i);const[la,lo]=v2ll(v);const s=smooth(.02,.5,samp(MWB,la,lo));c.copy(DEEP).lerp(MID,smooth(0,.35,s)).lerp(SHAL,smooth(.3,1,s)).lerp(FOAM,smooth(.4,.5,samp(MS,la,lo))*.55);lin(c);wc[i*3]=c.r;wc[i*3+1]=c.g;wc[i*3+2]=c.b}
   wg.setAttribute('color',new THREE.BufferAttribute(wc,3));
   const wm=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.86,roughness:HQ?.12:.3,metalness:HQ?.1:.02,dithering:true});
@@ -1187,8 +1195,24 @@ function buildBiblicalAtlas(){
 }
 const US_STATES=[["Alabama","AL","Montgomery",32.3777,-86.3006,"The Gulf Coast and Appalachian foothills make Alabama's landscapes diverse."],["Alaska","AK","Juneau",58.3019,-134.4197,"Denali is North America's highest mountain; Alaska also has enormous glaciers."],["Arizona","AZ","Phoenix",33.4484,-112.074,"The Grand Canyon reveals nearly two billion years of geological history."],["Arkansas","AR","Little Rock",34.7465,-92.2896,"The Ozark and Ouachita Mountains are known for forests and rivers."],["California","CA","Sacramento",38.5767,-121.4934,"California includes the Sierra Nevada, giant sequoias, and Death Valley."],["Colorado","CO","Denver",39.7392,-104.9903,"Colorado has dozens of Rocky Mountain peaks above 14,000 feet."],["Connecticut","CT","Hartford",41.7658,-72.6734,"The Connecticut River shapes one of New England's major valleys."],["Delaware","DE","Dover",39.1582,-75.5244,"Delaware was the first state to ratify the U.S. Constitution."],["Florida","FL","Tallahassee",30.4383,-84.2807,"The Everglades protect wetlands, alligators, manatees, and many birds."],["Georgia","GA","Atlanta",33.749,-84.388,"Georgia stretches from the Blue Ridge Mountains to Atlantic marshlands."],["Hawaii","HI","Honolulu",21.3099,-157.8581,"Hawaiʻi's volcanic islands formed above a hotspot in the Pacific Plate."],["Idaho","ID","Boise",43.615,-116.2023,"Idaho contains the Snake River Plain and rugged Sawtooth Mountains."],["Illinois","IL","Springfield",39.7817,-89.6501,"Illinois combines rich prairie farmland with the shores of Lake Michigan."],["Indiana","IN","Indianapolis",39.7684,-86.1581,"Indiana's dunes along Lake Michigan protect unusual sand and wetland habitats."],["Iowa","IA","Des Moines",41.5868,-93.625,"Iowa's fertile prairie soils make it a major corn and soybean producer."],["Kansas","KS","Topeka",39.0473,-95.6752,"Kansas lies in the Great Plains, known for grasslands and agriculture."],["Kentucky","KY","Frankfort",38.2009,-84.8733,"Mammoth Cave is part of the world's longest known cave system."],["Louisiana","LA","Baton Rouge",30.4515,-91.1871,"The Mississippi River delta supports important wetlands and wildlife."],["Maine","ME","Augusta",44.3106,-69.7795,"Maine's rocky coast and Acadia National Park are shaped by glaciers."],["Maryland","MD","Annapolis",38.9784,-76.4922,"The Chesapeake Bay is North America's largest estuary."],["Massachusetts","MA","Boston",42.3601,-71.0589,"Massachusetts is known for its Atlantic coast and early American history."],["Michigan","MI","Lansing",42.7325,-84.5555,"Michigan touches four Great Lakes and has two large peninsulas."],["Minnesota","MN","Saint Paul",44.9537,-93.09,"Minnesota is known for thousands of lakes and the Mississippi River headwaters."],["Mississippi","MS","Jackson",32.2988,-90.1848,"The Mississippi Delta is a major alluvial plain with a rich musical heritage."],["Missouri","MO","Jefferson City",38.5767,-92.1735,"The Missouri and Mississippi rivers meet near Saint Louis."],["Montana","MT","Helena",46.5884,-112.0245,"Glacier National Park preserves dramatic peaks and alpine wildlife."],["Nebraska","NE","Lincoln",40.8136,-96.7026,"The Sandhills are one of the world's largest grass-stabilized dune regions."],["Nevada","NV","Carson City",39.1638,-119.7674,"Nevada has vast desert basins, mountain ranges, and Lake Tahoe."],["New Hampshire","NH","Concord",43.2081,-71.5376,"The White Mountains include Mount Washington, known for severe weather."],["New Jersey","NJ","Trenton",40.2206,-74.7597,"New Jersey has Atlantic barrier islands and the Pine Barrens ecosystem."],["New Mexico","NM","Santa Fe",35.687,-105.9378,"New Mexico combines high deserts, volcanic terrain, and ancient Pueblo history."],["New York","NY","Albany",42.6526,-73.7562,"The Adirondacks and Niagara Falls are major natural landmarks."],["North Carolina","NC","Raleigh",35.7796,-78.6382,"North Carolina runs from Appalachian peaks to Outer Banks barrier islands."],["North Dakota","ND","Bismarck",46.8083,-100.7837,"Theodore Roosevelt National Park preserves North Dakota badlands."],["Ohio","OH","Columbus",39.9612,-82.9988,"Lake Erie, forests, and glacial plains shape Ohio's geography."],["Oklahoma","OK","Oklahoma City",35.4676,-97.5164,"Oklahoma includes prairie, forests, and portions of the ancient Wichita Mountains."],["Oregon","OR","Salem",44.9429,-123.0351,"Oregon's Cascade volcanoes include Mount Hood and Crater Lake."],["Pennsylvania","PA","Harrisburg",40.2732,-76.8867,"Pennsylvania's Appalachian ridges are rich in forests and waterways."],["Rhode Island","RI","Providence",41.824,-71.4128,"Rhode Island is the smallest state and has a deeply indented coastline."],["South Carolina","SC","Columbia",34.0007,-81.0348,"South Carolina includes Atlantic marshes and the Blue Ridge foothills."],["South Dakota","SD","Pierre",44.3683,-100.351,"The Black Hills and Badlands reveal contrasting mountain and prairie landscapes."],["Tennessee","TN","Nashville",36.1627,-86.7816,"Great Smoky Mountains National Park is famous for biodiversity."],["Texas","TX","Austin",30.2672,-97.7431,"Texas spans Gulf Coast marshes, plains, deserts, and the Guadalupe Mountains."],["Utah","UT","Salt Lake City",40.7608,-111.891,"Utah's red-rock arches, canyons, and Great Salt Lake are geological landmarks."],["Vermont","VT","Montpelier",44.2601,-72.5754,"The Green Mountains give Vermont its name and forested character."],["Virginia","VA","Richmond",37.5407,-77.436,"Virginia stretches from the Blue Ridge Mountains to the Chesapeake Bay."],["Washington","WA","Olympia",47.0379,-122.9007,"Washington includes Mount Rainier, temperate rainforests, and Puget Sound."],["West Virginia","WV","Charleston",38.3498,-81.6326,"The New River Gorge and Appalachians define much of the state's terrain."],["Wisconsin","WI","Madison",43.0731,-89.4012,"Glaciers carved Wisconsin's lakes and left distinctive landforms."],["Wyoming","WY","Cheyenne",41.14,-104.8202,"Yellowstone features geysers, hot springs, and abundant wildlife."]];
 
+let countryBorderLines=null;
+function loadCountryBorders(){
+  const t0=performance.now();
+  fetch(`https://cdn.jsdelivr.net/npm/world-atlas@2/countries-${HQ?'50m':'110m'}.json`)
+    .then(r=>{if(!r.ok)throw Error('World Atlas HTTP '+r.status);return r.json()})
+    .then(topology=>{
+      if(!topology||!topology.transform||!Array.isArray(topology.arcs))throw Error('Invalid World Atlas topology');
+      const {scale,translate}=topology.transform,positions=[],v=new V3();
+      for(const arc of topology.arcs){let x=0,y=0,prev=null;for(const step of arc){x+=step[0];y+=step[1];const lon=x*scale[0]+translate[0],lat=y*scale[1]+translate[1];v.copy(ll2v(lat,lon));const rr=Math.max(1.006,terrain(v).r+.0045),here=v.multiplyScalar(rr).clone();if(prev)positions.push(prev.x,prev.y,prev.z,here.x,here.y,here.z);prev=here}}
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+      countryBorderLines=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0xa5dff4,transparent:true,opacity:.52,depthWrite:false}));
+      countryBorderLines.name='World country borders';countryBorderLines.frustumCulled=false;world.add(countryBorderLines);
+      perfStats.countryBordersMs=Math.round(performance.now()-t0);
+    }).catch(e=>{perfStats.countryBordersError=String(e.message||e);console.warn('Country borders unavailable',e)});
+}
 let stateMarkerGroup=null,stateBorderLines=null;
 function buildUSStates(){
+  perfStats.stateBordersStarted=performance.now();
   stateMarkerGroup=new THREE.Group();stateMarkerGroup.name='US state capitals';world.add(stateMarkerGroup);
   const geometry=new THREE.OctahedronGeometry(.38,0);
   const material=new THREE.MeshStandardMaterial({color:0x8ee9ff,emissive:0x1b7594,emissiveIntensity:.5,metalness:.28,roughness:.38});
@@ -1231,10 +1255,21 @@ function drawUSStateBoundaries(topology){
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
   stateBorderLines=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0x9eeaff,transparent:true,opacity:.72,depthWrite:false}));
   stateBorderLines.name='US Census-derived state borders';stateBorderLines.frustumCulled=false;
-  world.add(stateBorderLines);window.branchUSStates={states:US_STATES.length,boundaries:true,segments:positions.length/6};
+  world.add(stateBorderLines);perfStats.stateBordersMs=Math.round(performance.now()-(perfStats.stateBordersStarted||performance.now()));window.branchUSStates={states:US_STATES.length,boundaries:true,segments:positions.length/6};
+}
+function enhanceLandmarkDesign(model,id){
+  model.traverse(o=>{if(!o.isMesh)return;const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats){if(!m)return;m.dithering=true;if('envMapIntensity' in m)m.envMapIntensity=HQ?1.05:.62;if(m.map){m.map.anisotropy=MAXANISO;m.map.generateMipmaps=true;m.map.minFilter=THREE.LinearMipmapLinearFilter}}});
+  if(!HQ)return;
+  const accents={
+    eiffel:[0,1.53,0,0xb7f5ff],liberty:[.12,1.2,0,0xffb640],burj:[0,1.73,0,0xd7f8ff],
+    petronas:[0,1.32,0,0xd7f8ff],cntower:[0,1.25,0,0xff7070],spaceneedle:[0,1.08,0,0xa8ecff]
+  },a=accents[id];if(!a)return;
+  const mat=new THREE.MeshStandardMaterial({color:a[3],emissive:a[3],emissiveIntensity:1.6,roughness:.12,metalness:.05,transparent:true,opacity:.92});
+  const orb=new THREE.Mesh(new THREE.SphereGeometry(.018,16,10),mat);orb.position.set(a[0],a[1],a[2]);model.add(orb);
+  const phase=rand()*TAU;animators.push((dt,t)=>{const pulse=.72+.28*Math.sin(t*2.4+phase);mat.emissiveIntensity=1.1+pulse*1.5;orb.scale.setScalar(.8+pulse*.32)});
 }
 function buildPlaces(){
-  LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id](),natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
+  LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id]();enhanceLandmarkDesign(model,id);const natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
     reg({id,cat:'landmark',name,place,facts,lat,lon,obj,mode:'earth',natural,footR:(obj.userData.footR||.6)*s,stats:natural?[['Type','Natural wonder']]:YEARS[id]?[['Built',YEARS[id]]]:null});
     if(obj.userData.spin)animators.push(dt=>obj.userData.spin.forEach(h=>h.rotation.z+=dt*1.6));
     if(obj.userData.mist)animators.push((dt,t)=>obj.userData.mist.forEach((m,i)=>{m.position.y=.33+Math.sin(t*1.5+i)*.05;m.scale.setScalar(1+Math.sin(t*2+i)*.15)}));
@@ -1346,8 +1381,8 @@ function buildIslands(){const NP=HQ?1100:500,palms=new THREE.InstancedMesh(palmG
   palms.count=np;if(palms.instanceColor)palms.instanceColor.needsUpdate=true;world.add(palms)}
 
 /* ================= CITIES (Civ-style districts + banners) ================= */
-const WIN=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const x=cv.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,64,64);for(let r=0;r<4;r++)for(let k=0;k<4;k++){x.fillStyle=rand()<.15?'#ffe9a8':(r+k)%3?'#6f8fb0':'#7d9cbc';x.fillRect(3+k*16,3+r*16,10,10)}const t=ctex(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t})();
-const CITY_WIN=new THREE.MeshStandardMaterial({vertexColors:true,map:WIN,roughness:.35,metalness:.22}),CITY_PLAIN=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75});
+const WIN=(()=>{const S=HQ?256:64,N=HQ?8:4,cv=document.createElement('canvas');cv.width=cv.height=S;const x=cv.getContext('2d');x.fillStyle='#f6f8fb';x.fillRect(0,0,S,S);const cell=S/N;for(let r=0;r<N;r++)for(let k=0;k<N;k++){x.fillStyle=rand()<.15?'#ffe9a8':(r+k)%3?'#6286aa':'#7899ba';x.fillRect(k*cell+cell*.16,r*cell+cell*.16,cell*.62,cell*.62);if(HQ){x.fillStyle='rgba(20,38,58,.25)';x.fillRect(k*cell+cell*.1,r*cell+cell*.84,cell*.78,Math.max(1,cell*.05))}}const t=ctex(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;return t})();
+const CITY_WIN=new THREE.MeshStandardMaterial({vertexColors:true,map:WIN,roughness:.3,metalness:.28,envMapIntensity:HQ?1.05:.65}),CITY_PLAIN=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.72,envMapIntensity:HQ?.85:.5});if(HQ){detailNoise(CITY_WIN,new THREE.Vector3(22,86,.07));detailNoise(CITY_PLAIN,new THREE.Vector3(18,70,.1))}
 const cityBanners=[];
 const popStr=p=>p>=10?Math.round(p)+'M':p>=1?p.toFixed(1)+'M':Math.round(p*1000)+'K';
 function buildCities(cityRows=CITIES){const lmAvoid=[...ITEMS.values()].filter(i=>i.cat==='landmark').map(i=>({id:i.id,p:ll2v(i.lat,i.lon),r2:Math.pow(i.footR+.002,2)}));
@@ -1382,7 +1417,7 @@ function buildCities(cityRows=CITIES){const lmAvoid=[...ITEMS.values()].filter(i
     cityBanners.push({el,n:C0.clone(),p:C0.clone().multiplyScalar(base+(lm?.03:.02))})})}
 
 /* ================= VEHICLES (realistic) ================= */
-const VMAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.38,metalness:.12}),VMAT2=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.6,side:THREE.DoubleSide});
+const VMAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.32,metalness:.18,envMapIntensity:HQ?1.1:.6}),VMAT2=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.55,side:THREE.DoubleSide,envMapIntensity:HQ?.9:.5});if(HQ){detailNoise(VMAT,new THREE.Vector3(28,90,.08));detailNoise(VMAT2,new THREE.Vector3(20,64,.06))}
 const FADE=(()=>{const cv=document.createElement('canvas');cv.width=8;cv.height=128;const x=cv.getContext('2d'),g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,1)');x.fillStyle=g;x.fillRect(0,0,8,128);return new THREE.CanvasTexture(cv)})();
 function trail(w,L,x,y,z,op){const geo=new THREE.PlaneGeometry(w,L);geo.rotateX(-Math.PI/2);geo.translate(x,y,z-L/2);return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:FADE,transparent:true,depthWrite:false,opacity:op,side:THREE.DoubleSide}))}
 function vmesh(parts,m=VMAT){const me=new THREE.Mesh(mergeParts(parts),m);me.castShadow=me.receiveShadow=true;return me}
@@ -1619,7 +1654,7 @@ canvas.addEventListener('pointermove',e=>{if(!drag.active){hoverAt(e.clientX,e.c
   const p=drag.pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;drag.moved+=Math.abs(dx)+Math.abs(dy);
   if(drag.pts.size===2){const[a,b]=[...drag.pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(drag.pinch)zoomBy(Math.pow(drag.pinch/d,1.4));drag.pinch=d;return}
   const now=performance.now(),dtm=Math.max(1,now-drag.lastT)/1000;drag.lastT=now;
-  if(mode==='earth'&&!ride&&!launchState){const s=.085*(EC.alt+.06)*(800/Math.max(500,innerHeight));EC.tLon-=dx*s;EC.tLat+=dy*s;EC.lon-=dx*s;EC.lat=clamp(EC.lat+dy*s,-80,82);EC.vLon=-dx*s/dtm*.6;EC.vLat=dy*s/dtm*.6;EC.k=8}
+  if(mode==='earth'&&!ride&&!launchState&&!experience){const s=.085*(EC.alt+.06)*(800/Math.max(500,innerHeight));EC.tLon-=dx*s;EC.tLat+=dy*s;EC.lon-=dx*s;EC.lat=clamp(EC.lat+dy*s,-80,82);EC.vLon=-dx*s/dtm*.6;EC.vLat=dy*s/dtm*.6;EC.k=8}
   else if(ride){ride.yaw-=dx*.006;ride.pitch=clamp(ride.pitch+dy*.004,-.6,1.2)}
   else if(mode==='space'){SC.tYaw-=dx*.006;SC.tPitch=clamp(SC.tPitch+dy*.005,-1.45,1.45)}
   $('tip').hidden=true});
@@ -1653,6 +1688,49 @@ const CATN={landmark:'Wonder',animal:'Animal',country:'Country',city:'City',vehi
 const SKIND={iss:'Spacecraft',voyager:'Spacecraft',sun:'Star',moon:'Moon',io:'Moon',europa:'Moon',titan:'Moon',pluto:'Dwarf planet',belt:'Asteroids',comet:'Comet'};
 function catName(it){if(it.cat==='landmark')return it.natural?'Natural wonder':'Wonder';if(it.cat==='space')return SKIND[it.id]||(it.far?'Deep space':'Planet');return CATN[it.cat]}
 
+const WORLD_EXPERIENCES={
+ 'Brazil':{label:'Amazon Sky Journey',fact:'Follow one of Earth’s great river systems across northern Brazil.',stops:[[-3.1,-60.0,.44],[-2.4,-56.0,.36],[-1.6,-52.0,.3],[-1.45,-48.5,.28]]},
+ 'Egypt':{label:'Nile Expedition',fact:'Travel north along the Nile from Upper Egypt toward Cairo and the delta.',stops:[[24.09,32.9,.38],[25.69,32.64,.3],[29.98,31.13,.26],[30.8,31.2,.34]]},
+ 'Japan':{label:'Volcano & City Flyover',fact:'Cross Japan from Tokyo toward Mount Fuji and central Honshu.',stops:[[35.68,139.76,.33],[35.36,138.73,.2],[34.7,135.5,.3]]},
+ 'Australia':{label:'Australia Explorer Hop',fact:'Fly from Sydney toward the red center and Australia’s tropical north.',stops:[[-33.87,151.21,.34],[-25.34,131.04,.28],[-16.92,145.78,.32]]},
+ 'Kenya':{label:'Great Rift Safari',fact:'Trace highlands and savanna landscapes across Kenya.',stops:[[-1.29,36.82,.3],[-.42,36.1,.24],[-2.6,37.25,.3]]},
+ 'Iceland':{label:'Fire & Ice Circuit',fact:'Circle volcanic and glacial landscapes shaped by the Mid-Atlantic Ridge.',stops:[[64.15,-21.94,.26],[64.8,-18.1,.22],[63.63,-19.6,.2],[64.15,-21.94,.28]]},
+ 'India':{label:'India Heritage Route',fact:'Fly from Delhi toward Agra and the Taj Mahal, then toward central India.',stops:[[28.61,77.21,.3],[27.17,78.04,.19],[23.5,78.5,.38]]},
+ 'China':{label:'Great Wall Explorer',fact:'Follow a northern China route near sections of the Great Wall.',stops:[[39.9,116.4,.3],[40.36,116.0,.19],[40.68,117.23,.22],[39.9,119.5,.32]]},
+ 'United States':{label:'American Landscapes',fact:'Hop from the Atlantic coast across the plains and Rockies to the Pacific.',stops:[[40.71,-74,.4],[39.1,-96.5,.46],[39.0,-105.5,.32],[37.77,-122.42,.36]]},
+ 'Hawaii':{label:'Hawaiian Volcano Hop',fact:'Island-hop across Hawaiʻi’s volcanic chain.',stops:[[21.31,-157.86,.22],[20.8,-156.4,.18],[19.6,-155.55,.16]]}
+};
+const LANDMARK_EXPERIENCES={
+ grandcanyon:{label:'Grand Canyon Rim Flight',fact:'Glide along a canyon carved over millions of years by the Colorado River.',stops:[[36.25,-112.55,.22],[36.15,-112.2,.15],[36.05,-111.85,.17],[35.95,-111.6,.23]]},
+ greatwall:{label:'Follow the Great Wall',fact:'Trace a short section of the Great Wall across northern China.',stops:[[40.42,116.0,.17],[40.5,116.4,.15],[40.65,117.0,.18]]},
+ fuji:{label:'Mount Fuji Circle',fact:'Circle Japan’s highest mountain and see its volcanic cone from several angles.',stops:[[35.55,138.55,.16],[35.35,138.72,.12],[35.18,138.92,.16],[35.45,139.05,.18]]},
+ reef:{label:'Great Barrier Reef Glide',fact:'Follow part of the world’s largest coral reef system along northeastern Australia.',stops:[[-16.5,146.0,.15],[-18.3,147.2,.15],[-20.2,149.0,.16],[-22.0,150.3,.18]]},
+ victoria:{label:'Victoria Falls Flyby',fact:'Sweep over the Zambezi River and one of the world’s great waterfall landscapes.',stops:[[-17.75,25.75,.16],[-17.92,25.86,.11],[-18.04,25.98,.16]]},
+ aurora:{label:'Aurora Chase',fact:'Travel across high northern latitudes where auroras are often visible.',stops:[[64.15,-21.9,.2],[67.5,-18,.2],[69.6,18.9,.23]]}
+};
+let experience=null;
+function experienceFor(it){if(!it)return null;if(it.cat==='country')return WORLD_EXPERIENCES[it.name]||null;if(it.cat==='state'&&it.name==='Hawaii')return WORLD_EXPERIENCES.Hawaii;if(it.cat==='landmark')return LANDMARK_EXPERIENCES[it.id]||null;return null}
+function stopExperience(completed=false){
+  if(!experience)return;world.remove(experience.marker);world.remove(experience.path);experience.marker.geometry.dispose();experience.marker.material.dispose();experience.path.geometry.dispose();experience.path.material.dispose();
+  if(completed)toast('Adventure complete',experience.spec.label);experience=null;$('expHud').hidden=true;
+}
+function startExperience(it){
+  const spec=experienceFor(it);if(!spec||mode!=='earth'||launchState)return;stopExperience(false);exitRide();$('card').hidden=true;showVehicleRoute(null);
+  const pts=[];for(let i=0;i<spec.stops.length-1;i++){const a=ll2v(spec.stops[i][0],spec.stops[i][1]),b=ll2v(spec.stops[i+1][0],spec.stops[i+1][1]);for(let j=0;j<32;j++)pts.push(slerpV(a,b,j/32).multiplyScalar(1.014))}
+  const path=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x62e9ff,transparent:true,opacity:.55,depthWrite:false}));
+  const marker=new THREE.Mesh(new THREE.SphereGeometry(.012,HQ?20:10,HQ?12:8),new THREE.MeshStandardMaterial({color:0xe8ffff,emissive:0x35d9ff,emissiveIntensity:2,roughness:.18,metalness:.1}));
+  world.add(path,marker);experience={spec,path,marker,t:0,duration:Math.max(7,(spec.stops.length-1)*3.25)};
+  const first=spec.stops[0],fp=ll2v(first[0],first[1]);marker.position.copy(fp).multiplyScalar(1.018);flyTo(first[0],first[1],first[2]);
+  $('expName').textContent=spec.label;$('expFact').textContent=spec.fact;$('expBar').style.width='1%';$('expHud').hidden=false;toast('World Adventure',spec.label);blip([392,523,659,784]);
+}
+function experienceUpdate(dt){
+  if(!experience)return;const E=experience;E.t+=dt;const stops=E.spec.stops,p=clamp(E.t/E.duration,0,1),segFloat=p*(stops.length-1),seg=Math.min(stops.length-2,Math.floor(segFloat)),f=segFloat-seg;
+  const A=ll2v(stops[seg][0],stops[seg][1]),B=ll2v(stops[seg+1][0],stops[seg+1][1]),P=slerpV(A,B,smooth(0,1,f));E.marker.position.copy(P).multiplyScalar(1.018);
+  const [lat,lon]=v2ll(P),alt=lerp(stops[seg][2],stops[seg+1][2],f);EC.tLat=lat;EC.tLon=EC.lon+((((lon-EC.lon)%360)+540)%360-180);EC.tAlt=alt;EC.k=3.8;EC.vLat=EC.vLon=0;idle=0;$('expBar').style.width=(p*100).toFixed(1)+'%';
+  if(p>=1)stopExperience(true);
+}
+$('expSkip').onclick=()=>stopExperience(false);
+
 /* ================= CARD / DEX / QUESTS ================= */
 let openId=null,shownRoute=null;
 function showVehicleRoute(it){
@@ -1668,15 +1746,16 @@ function openItem(it,discoverIt){showVehicleRoute(it);openId=it.id;const card=$(
   $('cardStats').innerHTML=(it.stats||[]).map(([k,v])=>`<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
   const f=it.facts||[];$('cardFacts').innerHTML=f.map((x,i)=>i===f.length-1&&f.length>1?`<li class="dyk"><strong>Did you know?</strong>${esc(x)}</li>`:`<li>${esc(x)}</li>`).join('');
   const acts=[];if(mode==='earth'&&it.mode==='earth'){if(it.ride)acts.push(['ride','Ride along',1]);else if(it.lat!==undefined)acts.push(['zoom','Fly closer',0]);if(it.id==='ksc')acts.push(['launch','Launch to space',1])}
+  const xp=experienceFor(it);if(xp)acts.push(['experience',xp.label,1]);
   if(it.cat==='country'&&it.name!=='Antarctica')acts.push(['trade','See current trade data',0]);
   if(mode==='space'&&it.mode==='space'&&it.obj)acts.push(['visit','Visit',0]);if(mode==='earth'&&it.mode==='space'&&it.id!=='iss')acts.push(['launch','Launch to see it',1]);
   $('cardActions').innerHTML=acts.map(([a,l,p])=>`<button class="act${p?' primary':''}" data-a="${a}" type="button">${l}</button>`).join('');
   card.hidden=false;card.style.animation='none';card.offsetHeight;card.style.animation='';
   if(discoverIt)discover(it)}
 $('cardActions').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const it=ITEMS.get(openId);const a=b.dataset.a;
-  if(a==='zoom'){flyTo(it.lat,it.lon,.22)}else if(a==='ride'){startRide(it)}else if(a==='launch'){launch()}else if(a==='visit'){scFlyTo(it)}else if(a==='trade'){window.open('https://wits.worldbank.org/','_blank','noopener,noreferrer')}});
+  if(a==='zoom'){flyTo(it.lat,it.lon,.22)}else if(a==='ride'){startRide(it)}else if(a==='launch'){launch()}else if(a==='visit'){scFlyTo(it)}else if(a==='trade'){window.open('https://wits.worldbank.org/','_blank','noopener,noreferrer')}else if(a==='experience'){startExperience(it)}});
 $('cardClose').onclick=()=>{$('card').hidden=true;openId=null;showVehicleRoute(null)};
-function discover(it){if(found.has(it.id))return;found.add(it.id);save();updateCounts();
+function discover(it){if(found.has(it.id))return;const before=discoveryCount();found.add(it.id);save();updateCounts();milestoneReached(before,discoveryCount());
   if(it.cat==='vehicle')return;if(it.cat==='landmark'){splash(it);blip([523,659,784,1047])}else{toast('New discovery!',it.name);blip([660,880,1320])}checkQuest(it.id)}
 function splash(it){const s=$('splash');$('spEy').textContent=it.natural?'Natural wonder discovered':'Wonder discovered';$('spName').textContent=it.name;$('spMeta').textContent=[it.place,!it.natural&&YEARS[it.id]?'Built '+YEARS[it.id]:''].filter(Boolean).join(' · ');$('spQuote').textContent=it.facts[0];s.hidden=false;s.style.animation='none';void s.offsetHeight;s.style.animation='';clearTimeout(splash.t);splash.t=setTimeout(()=>s.hidden=true,4200)}
 $('splash').onclick=()=>$('splash').hidden=true;
@@ -1691,9 +1770,23 @@ $('qHint').onclick=()=>{const q=QUESTS[questIdx];if(!q)return;const it=ITEMS.get
 let toastT;function toast(ey,name){$('toastEy').textContent=ey;$('toastName').textContent=name;const t=$('toast');t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
 const DEXCATS=[['landmark','Wonders'],['animal','Animals'],['country','Countries'],['island','Islands'],['city','Cities'],['biblical','Biblical Atlas'],['state','U.S. States'],['space','Space']];let dexCat='landmark';
 function countable(){return[...ITEMS.values()].filter(i=>i.cat!=='vehicle')}
+function discoveryCount(){const ids=new Set(countable().map(i=>i.id));let n=0;for(const id of found)if(ids.has(id))n++;return n}
+function nextMilestone(n,total){if(n>=total)return total;if(n<5)return 5;if(n<10)return 10;return Math.min(total,Math.ceil((n+1)/10)*10)}
+function updateMilestone(){
+  const total=countable().length,n=discoveryCount(),goal=nextMilestone(n,total),prev=n<5?0:n<10?5:Math.max(10,goal-10);
+  $('msLabel').textContent=n>=total?'Explorer collection complete':'Next explorer milestone';
+  $('msCount').textContent=n>=total?total+' / '+total:n+' / '+goal;
+  $('msBar').style.width=(n>=total?100:clamp((n-prev)/Math.max(1,goal-prev),0,1)*100).toFixed(1)+'%';
+}
+function milestoneReached(before,after){
+  const total=countable().length,candidates=[5,10];for(let n=20;n<=total;n+=10)candidates.push(n);
+  const hit=candidates.find(n=>before<n&&after>=n);if(!hit)return;
+  const title=hit>=100?'World Scholar':hit>=50?'Globe Trotter':hit>=20?'Pathfinder':'Trailblazer';
+  setTimeout(()=>{toast('Milestone unlocked',title+' · '+hit+' discoveries');blip([523,659,784,1047,1319])},450);
+}
 function updateCounts(){const all=countable();$('dexCount').textContent=`${all.filter(i=>found.has(i.id)).length}/${all.length}`;
   const n=c=>all.filter(i=>i.cat===c).length;$('stats').textContent=`${n('landmark')} wonders · ${n('country')} countries · ${n('island')} islands · ${n('city')} cities · ${n('animal')} animals · ${n('biblical')} biblical sites · ${n('state')} states · ${n('space')} space stops`;
-  document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('seen',found.has(b.dataset.id)))}
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('seen',found.has(b.dataset.id)));updateMilestone()}
 function renderDex(){const all=countable();$('dexSheet').dataset.cat=dexCat;
   $('dexTabs').innerHTML=DEXCATS.map(([c,l])=>{const xs=all.filter(i=>i.cat===c);return`<button class="tab${c===dexCat?' on':''}" data-cat="${c}" data-c="${c}" type="button">${l} <b>${xs.filter(i=>found.has(i.id)).length}/${xs.length}</b></button>`}).join('');
   const xs=all.filter(i=>i.cat===dexCat);$('dexBar').style.width=(xs.filter(i=>found.has(i.id)).length/xs.length*100)+'%';
@@ -1832,6 +1925,7 @@ function resize(){const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);rende
 addEventListener('resize',resize);
 const shadowCenter=new V3(),Ld=new V3();
 function updateEarth(dt,t){
+  if(experience)experienceUpdate(dt);
   movers.forEach(m=>m.update(dt,t));animators.forEach(f=>f(dt,t));smokeUpdate(dt);
   if(launchState)launchUpdate(dt,t);else if(ride)rideCam();else{earthCamUpdate(dt);frameCamera()}
   // light from camera's upper-left
@@ -1843,6 +1937,7 @@ function updateEarth(dt,t){
   const sc=sunL.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.updateProjectionMatrix()}
   if(stateMarkerGroup)stateMarkerGroup.visible=mode==='earth'&&!launchState&&EC.alt<1.15;
   if(stateBorderLines)stateBorderLines.visible=mode==='earth'&&!launchState&&EC.alt<2.1;
+  if(countryBorderLines)countryBorderLines.visible=mode==='earth'&&!launchState&&EC.alt<2.8;
   // cull far side
   const cd=camera.position.clone().normalize(),hor=1/camera.position.length()-.2;
   for(const o of pickables){const p=o.position;if(!p)continue;const l=p.length();if(l<.5)continue;o.visible=p.dot(cd)/l>hor}
@@ -1850,7 +1945,7 @@ function updateEarth(dt,t){
   WATER_T.value=t;WAVE_A.value=.035*smooth(.75,.22,ride?.3:EC.alt);const hgt=camera.position.length()-1,day=smooth(.24,.04,hgt);earthScene.background.copy(BG_SPACE).lerp(BG_SKY,day);earthScene.fog.color.copy(earthScene.background).convertSRGBToLinear();earthScene.fog.density=day*.8;starPts.material.opacity=1-day;
 }
 const clock=new THREE.Clock();let T=0,rafId=0,frameSample=0,frameSeconds=0,adjustCooldown=0;
-const perfStats={fps:0,dpr:renderDPR,frames:0,drawCalls:0,triangles:0};
+const PERF_START=performance.now();const perfStats={fps:0,dpr:renderDPR,frames:0,drawCalls:0,triangles:0,bootMs:0,spaceReadyMs:0,countryBordersMs:0,stateBordersMs:0};
 window.branchAdventurePerf=Object.freeze({snapshot:()=>({...perfStats,mode,quality})});
 function loop(){
   if(document.hidden){rafId=0;return}
@@ -1879,9 +1974,9 @@ document.addEventListener('visibilitychange',()=>{
 async function boot(){
   await wait(30);paintMaps();$('loadMsg').textContent='Raising mountains…';await wait(20);
   buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
-  buildPlaces();buildBiblicalAtlas();buildUSStates();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
+  buildPlaces();buildBiblicalAtlas();buildUSStates();loadCountryBorders();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   // First interactive scene before decorative terrain instancing.
-  if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
+  if(!document.hidden)loop();perfStats.bootMs=Math.round(performance.now()-PERF_START);const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
   // Yield to the compositor, then add distant decorative detail progressively.
   requestAnimationFrame(()=>setTimeout(()=>{
     try{buildMountains();requestAnimationFrame(()=>setTimeout(()=>{try{buildTrees()}catch(e){console.warn('Trees unavailable',e)}},0))}
@@ -1913,7 +2008,7 @@ function ensureSpaceReady(){
   spacePromise=new Promise((resolve,reject)=>requestAnimationFrame(()=>setTimeout(()=>{
     try{resolve(buildSpace())}catch(error){reject(error)}
   },0))).then(()=>{
-    buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;
+    buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;perfStats.spaceReadyMs=Math.round(performance.now()-PERF_START);
     if(location.hash==='#space')enterSpace();
   }).catch(error=>{console.error('Space initialization failed',error);toast('Space','Space content could not load');throw error});
   return spacePromise;
