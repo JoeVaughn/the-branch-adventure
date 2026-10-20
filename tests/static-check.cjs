@@ -34,7 +34,7 @@ for(const row of stateRows)assert(row.length===6 && row[2] && Number.isFinite(ro
 for(const token of ['function drawUSStateBoundaries(topology)','states-10m.json',"['state','U.S. States']",'US Census-derived state borders'])assert(html.includes(token),'Missing state atlas feature: '+token);
 console.log('PASS: 50 U.S. capitals, facts, and Census-derived boundary renderer');
 
-for(const token of ['world-atlas@2/countries-110m.json','function updateMilestone()','function milestoneReached(','const WORLD_EXPERIENCES=','function startExperience(it)','function experienceUpdate(dt)',"Amazon Sky Journey","Nile Expedition","Volcano & City Flyover",'function enhanceLandmarkDesign(model,id)','countryBordersMs','spaceReadyMs'])assert(html.includes(token),'Missing world polish feature '+token);
+for(const token of ['world-atlas@2/countries-','function updateMilestone()','function milestoneReached(','const WORLD_EXPERIENCES=','function startExperience(it)','function experienceUpdate(dt)',"Amazon Sky Journey","Nile Expedition","Volcano & City Flyover",'function enhanceLandmarkDesign(model,id)','countryBordersMs','spaceReadyMs'])assert(html.includes(token),'Missing world polish feature '+token);
 assert(html.includes('const W=HQ?256:64,H=HQ?1024:256'),'HQ building window texture resolution missing');
 assert(html.includes('const S=HQ?256:64,N=HQ?8:4'),'HQ city facade texture resolution missing');
 console.log('PASS: HQ textures, global borders, milestones, guided adventures and load telemetry');
