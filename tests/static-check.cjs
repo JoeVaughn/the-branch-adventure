@@ -3,7 +3,7 @@ const html=fs.readFileSync('index.html','utf8');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert(scripts.length>0,'No inline scripts found');
 for(const [index,script] of scripts.entries())new vm.Script(script[1],{filename:'inline-'+index+'.js'});
-for(const token of ['function buildEarth()','function buildAtmosphere()','function buildSpace()','function applyRenderDPR(','visibilitychange','window.branchAdventurePerf','buildPlaces();buildIslands();buildGroundTraffic();buildLabels();','spacePromise=new Promise'])assert(html.includes(token),'Missing '+token);
+for(const token of ['function buildEarth()','function buildAtmosphere()','function buildSpace()','function applyRenderDPR(','visibilitychange','window.branchAdventurePerf','buildPlaces();buildBiblicalAtlas();buildIslands();buildGroundTraffic();buildLabels();','spacePromise=new Promise'])assert(html.includes(token),'Missing '+token);
 console.log('PASS: inline JS syntax and critical feature presence ('+scripts.length+' scripts)');
 const match=html.match(/const COUNTRY_ECONOMY=(\{[^\n]+\});/);
 assert(match,'Country economy dataset missing');
@@ -21,3 +21,6 @@ console.log('PASS: Eight Hawaiian island meshes and elevation shaping');
 
 for(const token of ['function makeHelicopterOrbit(','function buildGroundTraffic()','VEHICLES.push(','new THREE.InstancedMesh(new THREE.BoxGeometry'])assert(html.includes(token),'Missing dynamic transport system '+token);
 console.log('PASS: helicopter hovering, expanded air/sea routes and global road traffic');
+
+for(const token of ['const BIBLICAL_SITES=','function buildBiblicalAtlas()','1 Enoch 6:6','1 Enoch 10:4-6','Jubilees 8:19',"['biblical','Biblical Atlas']"])assert(html.includes(token),'Missing biblical atlas '+token);
+console.log('PASS: Ethiopian canon atlas references and category');

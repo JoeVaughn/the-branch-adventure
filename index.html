@@ -1153,6 +1153,38 @@ function buildGroundTraffic(){
   };
   render(0);world.add(cars);animators.push(render);
 }
+// Ethiopian biblical canon geographical atlas: only mapped sites with identifiable
+// modern geographic referents. References are chapter/verse citations, not invented quotes.
+const BIBLICAL_SITES=[
+ ['hermon','Mount Hermon','Levant',33.416,35.857,'Identifiable mountain','1 Enoch 6:6','1 Enoch describes two hundred Watchers descending and making their oath on Mount Hermon.'],
+ ['zion','Mount Zion / Jerusalem','Jerusalem',31.772,35.229,'Traditional site','Jubilees 8:19','Jubilees names Mount Zion as one of three holy places together with Eden and Sinai; the modern Mount Zion identification is traditional.'],
+ ['sinai','Mount Sinai (traditional)','Sinai Peninsula',28.54,33.975,'Disputed identification','Jubilees 8:19','Jubilees mentions Sinai among the holy places. Jebel Musa is a traditional identification, not a proven location of the biblical event.'],
+ ['ararat','Mountains of Ararat','Armenian Highlands',39.702,44.299,'Regional identification','Jubilees 8:21; Genesis 8:4','Ararat is a mountain region in the text, not proof that the Ark rested on the modern summit of Mount Ararat.'],
+ ['babylon','Babylon','Mesopotamia / Iraq',32.536,44.421,'Archaeological site','Jubilees 8:21','The text names Babel among the lands associated with Shem. Ancient Babylon has a known archaeological location.'],
+ ['susa','Susa','Khuzestan / Iran',32.19,48.256,'Archaeological site','Jubilees 8:21','Jubilees names Susa (Susan) among the territories described in the division of the earth.'],
+ ['bashan','Bashan (region)','Golan / Hauran',32.9,36.12,'Approximate region','Jubilees 8:21','Jubilees includes the land of Bashan; the pin represents the wider historical region, not an exact boundary.'],
+ ['lebanon','Mount Lebanon','Lebanon',34.24,35.99,'Regional identification','Jubilees 8:21','Jubilees mentions Lebanon among the lands in its geographic description.'],
+ ['redsea','Red Sea','Red Sea',22,38,'Identifiable body of water','Jubilees 8:21','The Red Sea is explicitly referenced in the regional descriptions in Jubilees.'],
+ ['asshur','Asshur / Aššur','Northern Iraq',35.46,43.26,'Archaeological site','Jubilees 8:21','Jubilees names Asshur; the historical Assyrian city of Ashur has an identified site.'],
+ ['elam','Elam (region)','Southwestern Iran',31.8,48.8,'Approximate region','Jubilees 8:21','Jubilees lists Elam; this marker represents its broad historical region.'],
+ ['eden','Eden (unlocated)','Location unknown',null,null,'Unlocated textual place','Jubilees 8:19; Genesis 2:8-14','Eden is described in scripture, but its exact geographic location is unknown. No coordinate is assigned.'],
+ ['dudael','Dudael (unlocated)','Location unknown',null,null,'Unlocated textual place','1 Enoch 10:4-6','Raphael is commanded to bind Azazel in Dudael. The text gives no securely identifiable modern coordinates.']
+];
+function buildBiblicalAtlas(){
+  for(const [slug,name,place,lat,lon,certainty,ref,summary] of BIBLICAL_SITES){
+    const id='bib-'+slug,located=lat!==null;
+    let obj=null;
+    if(located){
+      obj=new THREE.Group();
+      const gold=new THREE.MeshStandardMaterial({color:'#f5d688',metalness:.36,roughness:.4,emissive:'#8a5918',emissiveIntensity:.16});
+      const cone=new THREE.Mesh(new THREE.ConeGeometry(.33,.86,5),gold);cone.position.y=.48;obj.add(cone);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(.37,.055,6,20),gold);ring.rotation.x=Math.PI/2;ring.position.y=.10;obj.add(ring);
+      placeOn(obj,lat,lon,.012,{r:1.007});
+    }
+    reg({id,cat:'biblical',name,place,lat:located?lat:undefined,lon:located?lon:undefined,obj,mode:'earth',
+      stats:[['Text',ref],['Location status',certainty]],facts:[summary,'References follow the Ethiopian Orthodox biblical tradition. Scripture identifies places differently from modern archaeological certainty.']});
+  }
+}
 function buildPlaces(){
   LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id](),natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
     reg({id,cat:'landmark',name,place,facts,lat,lon,obj,mode:'earth',natural,footR:(obj.userData.footR||.6)*s,stats:natural?[['Type','Natural wonder']]:YEARS[id]?[['Built',YEARS[id]]]:null});
@@ -1569,7 +1601,7 @@ function clickAt(x,y){if(launchState)return;const r=pickAt(x,y);if(!r)return;
 function nearestCountry(la,lo){const p=ll2v(la,lo);let best=null,bs=1e9;for(const it of ITEMS.values()){if(it.cat!=='country')continue;const d=p.angleTo(ll2v(it.lat,it.lon))/DEG/it.r;if(d<bs){bs=d;best=it}}return bs<1.6?best:null}
 function ping(){}
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const CATN={landmark:'Wonder',animal:'Animal',country:'Country',city:'City',vehicle:'Vehicle',space:'Space',island:'Island'};
+const CATN={landmark:'Wonder',animal:'Animal',country:'Country',city:'City',vehicle:'Vehicle',space:'Space',island:'Island',biblical:'Biblical site'};
 const SKIND={iss:'Spacecraft',voyager:'Spacecraft',sun:'Star',moon:'Moon',io:'Moon',europa:'Moon',titan:'Moon',pluto:'Dwarf planet',belt:'Asteroids',comet:'Comet'};
 function catName(it){if(it.cat==='landmark')return it.natural?'Natural wonder':'Wonder';if(it.cat==='space')return SKIND[it.id]||(it.far?'Deep space':'Planet');return CATN[it.cat]}
 
@@ -1609,18 +1641,19 @@ $('qHint').onclick=()=>{const q=QUESTS[questIdx];if(!q)return;const it=ITEMS.get
   else if(it.id==='iss'){toast('Hint','Look up! It orbits above the clouds');if(mode==='earth')flyTo(EC.tLat,EC.tLon,3.2)}
   else{if(mode!=='earth'){toast('Hint','It’s back on Earth');return}const la=it.lat??v2ll(it.obj.position)[0],lo=it.lon??v2ll(it.obj.position)[1];flyTo(la+(rand()-.5)*10,lo+(rand()-.5)*14,1.1);toast('Hint','Look around here…')}};
 let toastT;function toast(ey,name){$('toastEy').textContent=ey;$('toastName').textContent=name;const t=$('toast');t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
-const DEXCATS=[['landmark','Wonders'],['animal','Animals'],['country','Countries'],['island','Islands'],['city','Cities'],['space','Space']];let dexCat='landmark';
+const DEXCATS=[['landmark','Wonders'],['animal','Animals'],['country','Countries'],['island','Islands'],['city','Cities'],['biblical','Biblical Atlas'],['space','Space']];let dexCat='landmark';
 function countable(){return[...ITEMS.values()].filter(i=>i.cat!=='vehicle')}
 function updateCounts(){const all=countable();$('dexCount').textContent=`${all.filter(i=>found.has(i.id)).length}/${all.length}`;
-  const n=c=>all.filter(i=>i.cat===c).length;$('stats').textContent=`${n('landmark')} wonders · ${n('country')} countries · ${n('island')} islands · ${n('city')} cities · ${n('animal')} animals · ${n('space')} space stops`;
+  const n=c=>all.filter(i=>i.cat===c).length;$('stats').textContent=`${n('landmark')} wonders · ${n('country')} countries · ${n('island')} islands · ${n('city')} cities · ${n('animal')} animals · ${n('biblical')} biblical sites · ${n('space')} space stops`;
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('seen',found.has(b.dataset.id)))}
 function renderDex(){const all=countable();$('dexSheet').dataset.cat=dexCat;
   $('dexTabs').innerHTML=DEXCATS.map(([c,l])=>{const xs=all.filter(i=>i.cat===c);return`<button class="tab${c===dexCat?' on':''}" data-cat="${c}" data-c="${c}" type="button">${l} <b>${xs.filter(i=>found.has(i.id)).length}/${xs.length}</b></button>`}).join('');
   const xs=all.filter(i=>i.cat===dexCat);$('dexBar').style.width=(xs.filter(i=>found.has(i.id)).length/xs.length*100)+'%';
-  $('dexGrid').innerHTML=xs.map(i=>found.has(i.id)?`<button class="cell seen" data-id="${i.id}" type="button"><b>${i.flag?i.flag+' ':''}${esc(i.name)}</b><span>${esc(i.place||'')}</span></button>`:`<div class="cell locked"><b>???</b><span>${dexCat==='country'?'Tap the land to find it':'Not found yet'}</span></div>`).join('')}
+  $('dexGrid').innerHTML=xs.map(i=>(i.cat==='biblical'||found.has(i.id))?`<button class="cell seen" data-id="${i.id}" type="button"><b>${i.flag?i.flag+' ':''}${esc(i.name)}</b><span>${esc(i.place||'')}</span></button>`:`<div class="cell locked"><b>???</b><span>${dexCat==='country'?'Tap the land to find it':'Not found yet'}</span></div>`).join('')}
 $('btnDex').onclick=()=>{renderDex();$('dex').hidden=false};$('dexClose').onclick=()=>$('dex').hidden=true;$('dex').addEventListener('click',e=>{if(e.target.id==='dex')$('dex').hidden=true});
 $('dexTabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(b){dexCat=b.dataset.c;renderDex()}});
 $('dexGrid').addEventListener('click',e=>{const b=e.target.closest('.cell.seen');if(!b)return;const it=ITEMS.get(b.dataset.id);$('dex').hidden=true;openItem(it,false);
+  if(it.cat==='biblical')discover(it);
   if(it.mode==='earth'&&mode==='earth'){exitRide();if(it.lat!==undefined)flyTo(it.lat,it.lon,it.cat==='country'?.9:.25);else if(it.obj){const[la,lo]=v2ll(it.obj.position);flyTo(la,lo,.6)}}
   else if(it.mode==='space'&&mode==='space'&&it.obj)scFlyTo(it)});
 addEventListener('keydown',e=>{if(e.key==='Escape'){$('dex').hidden=true;if(ride)exitRide()}});
@@ -1796,7 +1829,7 @@ document.addEventListener('visibilitychange',()=>{
 async function boot(){
   await wait(30);paintMaps();$('loadMsg').textContent='Raising mountains…';await wait(20);
   buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
-  buildPlaces();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
+  buildPlaces();buildBiblicalAtlas();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   // First interactive scene before decorative terrain instancing.
   if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
   // Yield to the compositor, then add distant decorative detail progressively.
