@@ -2,7 +2,7 @@ const {chromium}=require('playwright');
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--disable-web-security']});
  let page=await browser.newPage({viewport:{width:1280,height:800}});
- await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'fast'})));
+ await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'high',found:['c-brazil']})));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>Boolean(window.branchAdventurePerf&&document.querySelector('#gl')),null,{timeout:90000});
