@@ -12,6 +12,16 @@ const {chromium}=require('playwright');
  if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
  if(!state.canvas||!state.perf.frames)throw Error('No active canvas frames: '+JSON.stringify(state));
  console.log('Browser Earth smoke test passed:',JSON.stringify(state));
+ // Verify the complete state atlas is navigable and educational details are present.
+ await page.locator('#btnDex').click();
+ await page.locator('#dexTabs .tab[data-cat="state"]').click();
+ const statesListed=await page.locator('#dexGrid .cell.seen').count();
+ if(statesListed!==50)throw Error('Expected 50 browsable U.S. states, got '+statesListed);
+ await page.locator('#dexGrid .cell.seen').first().click();
+ const details=await page.locator('#card').innerText();
+ if(!details.includes('Alabama')||!details.includes('Montgomery'))throw Error('U.S. state facts unavailable: '+details.slice(0,240));
+ console.log('Browser U.S. States atlas passed:',statesListed,'profiles, Alabama capital verified');
+
  // Exercise the deferred space-loading path as well as the initial Earth render.
  await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:30000});
  // Changing just the hash does not reload the app; test the documented direct-entry route.
