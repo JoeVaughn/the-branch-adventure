@@ -38,3 +38,6 @@ for(const token of ['world-atlas@2/countries-110m.json','function updateMileston
 assert(html.includes('const W=HQ?256:64,H=HQ?1024:256'),'HQ building window texture resolution missing');
 assert(html.includes('const S=HQ?256:64,N=HQ?8:4'),'HQ city facade texture resolution missing');
 console.log('PASS: HQ textures, global borders, milestones, guided adventures and load telemetry');
+
+for(const token of ['const LANDMARK_EXPERIENCES=','Grand Canyon Rim Flight','Great Barrier Reef Glide','Aurora Chase'])assert(html.includes(token),'Missing landmark adventure '+token);
+console.log('PASS: landmark-specific animated exploration experiences');
