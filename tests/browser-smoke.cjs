@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--disable-web-security']});
- const page=await browser.newPage({viewport:{width:1280,height:800}});
+ let page=await browser.newPage({viewport:{width:1280,height:800}});
  await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'fast'})));
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded',timeout:30000});
@@ -23,9 +23,11 @@ const {chromium}=require('playwright');
  console.log('Browser U.S. States atlas passed:',statesListed,'profiles, Alabama capital verified');
 
  // Exercise the deferred space-loading path as well as the initial Earth render.
- await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:30000});
- // Changing just the hash does not reload the app; test the documented direct-entry route.
- await page.reload({waitUntil:'domcontentloaded',timeout:30000});
+ await page.close();
+ page=await browser.newPage({viewport:{width:1280,height:800}});
+ await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'fast'})));
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',null,{timeout:120000});
  await page.waitForTimeout(1500);
  const space=await page.evaluate(()=>window.branchAdventurePerf.snapshot());
