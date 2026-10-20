@@ -1720,7 +1720,8 @@ function startExperience(it){
   const path=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x62e9ff,transparent:true,opacity:.55,depthWrite:false}));
   const marker=new THREE.Mesh(new THREE.SphereGeometry(.012,HQ?20:10,HQ?12:8),new THREE.MeshStandardMaterial({color:0xe8ffff,emissive:0x35d9ff,emissiveIntensity:2,roughness:.18,metalness:.1}));
   world.add(path,marker);experience={spec,path,marker,t:0,duration:Math.max(7,(spec.stops.length-1)*3.25)};
-  $('expName').textContent=spec.label;$('expFact').textContent=spec.fact;$('expBar').style.width='0%';$('expHud').hidden=false;toast('World Adventure',spec.label);blip([392,523,659,784]);
+  const first=spec.stops[0],fp=ll2v(first[0],first[1]);marker.position.copy(fp).multiplyScalar(1.018);flyTo(first[0],first[1],first[2]);
+  $('expName').textContent=spec.label;$('expFact').textContent=spec.fact;$('expBar').style.width='1%';$('expHud').hidden=false;toast('World Adventure',spec.label);blip([392,523,659,784]);
 }
 function experienceUpdate(dt){
   if(!experience)return;const E=experience;E.t+=dt;const stops=E.spec.stops,p=clamp(E.t/E.duration,0,1),segFloat=p*(stops.length-1),seg=Math.min(stops.length-2,Math.floor(segFloat)),f=segFloat-seg;
