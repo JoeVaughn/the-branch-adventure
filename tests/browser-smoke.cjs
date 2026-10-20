@@ -3,15 +3,26 @@ const {chromium}=require('playwright');
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--disable-web-security']});
  let page=await browser.newPage({viewport:{width:1280,height:800}});
  await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'high',found:['c-brazil']})));
- const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const errors=[];
+ // Freeze through the app's background-tab lifecycle only during capture.
+ // SwiftShader can starve Chrome's compositor when a continuous WebGL loop is active.
+ // Resume immediately afterwards so interaction checks still run against live animation.
+ const capture=async(p,options)=>{
+   await p.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))});
+   try{await p.screenshot({...options,timeout:60000})}
+   finally{await p.evaluate(()=>{delete document.hidden;document.dispatchEvent(new Event('visibilitychange'))})}
+ };
+ const watch=p=>{p.on('pageerror',e=>errors.push(e.message));p.on('console',m=>{if(m.type()==='error'&&/THREE.WebGLProgram|VALIDATE_STATUS|shader error|CONTEXT_LOST/i.test(m.text()))errors.push(m.text())})};
+ watch(page);
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded',timeout:30000});
- await page.waitForFunction(()=>Boolean(window.branchAdventurePerf&&document.querySelector('#gl')),null,{timeout:90000});
+ await page.waitForFunction(()=>Boolean(window.branchAdventurePerf?.snapshot().bootMs>0&&document.querySelector('#gl')),null,{timeout:90000});
  await page.waitForTimeout(1200);
  const state=await page.evaluate(()=>({canvas:!!document.querySelector('#gl'),perf:window.branchAdventurePerf.snapshot(),loading:!!document.querySelector('#loading'),body:document.body.innerText.slice(0,100)}));
- await page.screenshot({path:'earth-smoke.png'});
+ await capture(page,{path:'earth-smoke.png'});
  if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
  if(!state.canvas||!state.perf.frames)throw Error('No active canvas frames: '+JSON.stringify(state));
  console.log('Browser Earth smoke test passed:',JSON.stringify(state));
+ if(state.perf.visualVersion!=='cinematic-v2'||!state.perf.weather)throw Error('HQ weather layer missing');
  // Verify the complete state atlas is navigable and educational details are present.
  await page.locator('#btnDex').click();
  await page.locator('#dexTabs .tab[data-cat="state"]').click();
@@ -46,15 +57,43 @@ const {chromium}=require('playwright');
  await page.close();
  page=await browser.newPage({viewport:{width:1280,height:800}});
  await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'fast'})));
- page.on('pageerror',e=>errors.push(e.message));
+ watch(page);
  await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',null,{timeout:120000});
  await page.waitForTimeout(1500);
  const space=await page.evaluate(()=>window.branchAdventurePerf.snapshot());
- try{await page.screenshot({path:'space-smoke.png',timeout:12000})}catch(e){console.warn('Optional space screenshot skipped:',e.message)}
+ await capture(page,{path:'space-smoke.png'});
  if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
  if(space.mode!=='space'||space.frames<1)throw Error('Space scene failed: '+JSON.stringify(space));
  if(space.spaceReadyMs<=0||space.spaceReadyMs>120000)throw Error('Direct-space load exceeded 120s software-GPU budget: '+JSON.stringify(space));
  console.log('Browser Space smoke test passed:',JSON.stringify(space));
+ if(space.weather)throw Error('FAST mode allocated the HQ weather layer');
+ // Compile the HQ-only corona and inspect the lit rings in a real WebGL context.
+ await page.close();
+ page=await browser.newPage({viewport:{width:1280,height:800}});watch(page);
+ await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'high'})));
+ await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded'});
+ await page.waitForFunction(()=>window.branchAdventurePerf?.snapshot().mode==='space',null,{timeout:120000});
+ await page.locator('.sbtn[data-id="saturn"]').click();
+ await page.waitForFunction(()=>!window.branchAdventurePerf.snapshot().cameraMoving,null,{timeout:90000});
+ await page.waitForTimeout(1500);
+ await capture(page,{path:'saturn-hq.png'});
+ await page.locator('#cardClose').click();
+ await page.locator('.sbtn[data-id="sun"]').click();
+ await page.waitForFunction(()=>!window.branchAdventurePerf.snapshot().cameraMoving,null,{timeout:90000});
+ await page.waitForTimeout(1500);
+ await capture(page,{path:'sun-hq.png'});
+ await page.locator('#cardClose').click();
+ await page.locator('#btnEarth').click();
+ await page.waitForFunction(()=>window.branchAdventurePerf.snapshot().mode==='earth',null,{timeout:90000});
+ await page.waitForTimeout(1500);
+ await capture(page,{path:'earth-hq.png'});
+ await page.setViewportSize({width:390,height:844});
+ await page.waitForTimeout(1000);
+ const mobile=await page.evaluate(()=>({width:document.documentElement.scrollWidth,viewport:innerWidth,frames:window.branchAdventurePerf.snapshot().frames}));
+ if(mobile.width>mobile.viewport||mobile.frames<1)throw Error('Mobile layout/render failed: '+JSON.stringify(mobile));
+ await capture(page,{path:'earth-mobile.png'});
+ if(errors.length)throw Error('Shader/runtime regression: '+errors.join(' | '));
+ console.log('HQ space, return to Earth and mobile viewport passed');
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

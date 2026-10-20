@@ -24,4 +24,8 @@ jobs:
           path: |
             earth-smoke.png
             space-smoke.png
+            saturn-hq.png
+            sun-hq.png
+            earth-hq.png
+            earth-mobile.png
           if-no-files-found: ignore
