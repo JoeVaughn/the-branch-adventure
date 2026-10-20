@@ -63,6 +63,13 @@ button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 .quest .qc{font-size:13.5px;line-height:1.35;font-weight:700;min-width:0}
 .quest .qh{font-family:var(--f-display);font-weight:600;font-size:12px;padding:6px 11px;border-radius:999px;background:rgba(95,224,181,.16);color:var(--mint);border:1px solid rgba(95,224,181,.35)}
 .quest .qh:hover{background:rgba(95,224,181,.28)}
+.milestone{grid-column:1/-1;margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.09)}
+.msrow{display:flex;justify-content:space-between;gap:10px;font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.msbar{height:5px;margin-top:5px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden}
+.msbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--mint),#8edcff);box-shadow:0 0 10px rgba(95,224,181,.45);transition:width .45s ease}
+.exp-hud{position:fixed;left:50%;bottom:max(22px,calc(env(safe-area-inset-bottom,0px) + 22px));transform:translateX(-50%);z-index:30;width:min(560px,calc(100vw - 28px));background:rgba(7,14,32,.9);border:1px solid rgba(127,231,255,.35);border-radius:18px;padding:10px 12px;box-shadow:0 10px 32px rgba(0,0,0,.48),0 0 26px rgba(73,194,255,.13);backdrop-filter:blur(10px);display:grid;grid-template-columns:1fr auto;gap:5px 10px}
+.exp-hud b{font-family:var(--f-display);color:#c9faff;letter-spacing:.045em}.exp-hud small{grid-column:1/-1;color:var(--muted);line-height:1.35}.exp-hud .expbar{grid-column:1/-1;height:5px;background:rgba(255,255,255,.09);border-radius:10px;overflow:hidden}.exp-hud .expbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#66f5d0,#58bfff);transition:width .18s linear}.exp-hud button{grid-row:1/3;grid-column:2;font-size:11px;padding:6px 9px}
+
 .pills{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .pill{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-display);font-weight:600;font-size:14px;padding:9px 15px;border-radius:999px;background:var(--panel);border:1px solid var(--line);box-shadow:0 3px 0 rgba(0,0,0,.45);transition:transform .12s ease,background .12s}
 .pill:hover{background:var(--panel-2);transform:translateY(-1px)}
@@ -220,7 +227,7 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
     <div class="quest" id="quest">
       <div class="qe" id="qEyebrow">Quest</div>
       <div class="qc" id="qClue"></div>
-      <button class="qh" id="qHint" type="button">Hint</button>
+      <button class="qh" id="qHint" type="button">Hint</button><div class="milestone" id="milestone"><div class="msrow"><span id="msLabel">Discovery goal</span><b id="msCount">0 / 5</b></div><div class="msbar"><i id="msBar"></i></div></div>
     </div>
   </div>
   <nav class="pills">
@@ -257,6 +264,7 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
 <div class="tip" id="tip" hidden></div>
 <div class="splash" id="splash" hidden role="status"><div class="sp-ey" id="spEy">Wonder discovered</div><div class="sp-name" id="spName"></div><div class="sp-meta" id="spMeta"></div><p class="sp-quote" id="spQuote"></p></div>
 <div class="count" id="count" hidden aria-live="assertive"><div class="ct-ring"><svg viewBox="0 0 120 120"><circle class="ct-bg" cx="60" cy="60" r="52"/><circle class="ct-fg" id="ctArc" cx="60" cy="60" r="52"/></svg><span id="ctNum">10</span></div><div class="ct-msg" id="ctMsg">All systems go</div><button class="act" id="ctSkip" type="button">Skip countdown</button></div>
+<div class="exp-hud" id="expHud" hidden><div><b id="expName">World Adventure</b><small id="expFact"></small></div><button class="act" id="expSkip" type="button">End tour</button><div class="expbar"><i id="expBar"></i></div></div>
 <div class="toast" id="toast"><small id="toastEy">New discovery</small><b id="toastName"></b></div>
 
 <div class="modal" id="dex" hidden>
@@ -1634,7 +1642,7 @@ canvas.addEventListener('pointermove',e=>{if(!drag.active){hoverAt(e.clientX,e.c
   const p=drag.pts.get(e.pointerId);if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;drag.moved+=Math.abs(dx)+Math.abs(dy);
   if(drag.pts.size===2){const[a,b]=[...drag.pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(drag.pinch)zoomBy(Math.pow(drag.pinch/d,1.4));drag.pinch=d;return}
   const now=performance.now(),dtm=Math.max(1,now-drag.lastT)/1000;drag.lastT=now;
-  if(mode==='earth'&&!ride&&!launchState){const s=.085*(EC.alt+.06)*(800/Math.max(500,innerHeight));EC.tLon-=dx*s;EC.tLat+=dy*s;EC.lon-=dx*s;EC.lat=clamp(EC.lat+dy*s,-80,82);EC.vLon=-dx*s/dtm*.6;EC.vLat=dy*s/dtm*.6;EC.k=8}
+  if(mode==='earth'&&!ride&&!launchState&&!experience){const s=.085*(EC.alt+.06)*(800/Math.max(500,innerHeight));EC.tLon-=dx*s;EC.tLat+=dy*s;EC.lon-=dx*s;EC.lat=clamp(EC.lat+dy*s,-80,82);EC.vLon=-dx*s/dtm*.6;EC.vLat=dy*s/dtm*.6;EC.k=8}
   else if(ride){ride.yaw-=dx*.006;ride.pitch=clamp(ride.pitch+dy*.004,-.6,1.2)}
   else if(mode==='space'){SC.tYaw-=dx*.006;SC.tPitch=clamp(SC.tPitch+dy*.005,-1.45,1.45)}
   $('tip').hidden=true});
@@ -1668,6 +1676,40 @@ const CATN={landmark:'Wonder',animal:'Animal',country:'Country',city:'City',vehi
 const SKIND={iss:'Spacecraft',voyager:'Spacecraft',sun:'Star',moon:'Moon',io:'Moon',europa:'Moon',titan:'Moon',pluto:'Dwarf planet',belt:'Asteroids',comet:'Comet'};
 function catName(it){if(it.cat==='landmark')return it.natural?'Natural wonder':'Wonder';if(it.cat==='space')return SKIND[it.id]||(it.far?'Deep space':'Planet');return CATN[it.cat]}
 
+const WORLD_EXPERIENCES={
+ 'Brazil':{label:'Amazon Sky Journey',fact:'Follow one of Earth’s great river systems across northern Brazil.',stops:[[-3.1,-60.0,.44],[-2.4,-56.0,.36],[-1.6,-52.0,.3],[-1.45,-48.5,.28]]},
+ 'Egypt':{label:'Nile Expedition',fact:'Travel north along the Nile from Upper Egypt toward Cairo and the delta.',stops:[[24.09,32.9,.38],[25.69,32.64,.3],[29.98,31.13,.26],[30.8,31.2,.34]]},
+ 'Japan':{label:'Volcano & City Flyover',fact:'Cross Japan from Tokyo toward Mount Fuji and central Honshu.',stops:[[35.68,139.76,.33],[35.36,138.73,.2],[34.7,135.5,.3]]},
+ 'Australia':{label:'Australia Explorer Hop',fact:'Fly from Sydney toward the red center and Australia’s tropical north.',stops:[[-33.87,151.21,.34],[-25.34,131.04,.28],[-16.92,145.78,.32]]},
+ 'Kenya':{label:'Great Rift Safari',fact:'Trace highlands and savanna landscapes across Kenya.',stops:[[-1.29,36.82,.3],[-.42,36.1,.24],[-2.6,37.25,.3]]},
+ 'Iceland':{label:'Fire & Ice Circuit',fact:'Circle volcanic and glacial landscapes shaped by the Mid-Atlantic Ridge.',stops:[[64.15,-21.94,.26],[64.8,-18.1,.22],[63.63,-19.6,.2],[64.15,-21.94,.28]]},
+ 'India':{label:'India Heritage Route',fact:'Fly from Delhi toward Agra and the Taj Mahal, then toward central India.',stops:[[28.61,77.21,.3],[27.17,78.04,.19],[23.5,78.5,.38]]},
+ 'China':{label:'Great Wall Explorer',fact:'Follow a northern China route near sections of the Great Wall.',stops:[[39.9,116.4,.3],[40.36,116.0,.19],[40.68,117.23,.22],[39.9,119.5,.32]]},
+ 'United States':{label:'American Landscapes',fact:'Hop from the Atlantic coast across the plains and Rockies to the Pacific.',stops:[[40.71,-74,.4],[39.1,-96.5,.46],[39.0,-105.5,.32],[37.77,-122.42,.36]]},
+ 'Hawaii':{label:'Hawaiian Volcano Hop',fact:'Island-hop across Hawaiʻi’s volcanic chain.',stops:[[21.31,-157.86,.22],[20.8,-156.4,.18],[19.6,-155.55,.16]]}
+};
+let experience=null;
+function experienceFor(it){if(!it)return null;if(it.cat==='country')return WORLD_EXPERIENCES[it.name]||null;if(it.cat==='state'&&it.name==='Hawaii')return WORLD_EXPERIENCES.Hawaii;return null}
+function stopExperience(completed=false){
+  if(!experience)return;world.remove(experience.marker);world.remove(experience.path);experience.marker.geometry.dispose();experience.marker.material.dispose();experience.path.geometry.dispose();experience.path.material.dispose();
+  if(completed)toast('Adventure complete',experience.spec.label);experience=null;$('expHud').hidden=true;
+}
+function startExperience(it){
+  const spec=experienceFor(it);if(!spec||mode!=='earth'||launchState)return;stopExperience(false);exitRide();$('card').hidden=true;showVehicleRoute(null);
+  const pts=[];for(let i=0;i<spec.stops.length-1;i++){const a=ll2v(spec.stops[i][0],spec.stops[i][1]),b=ll2v(spec.stops[i+1][0],spec.stops[i+1][1]);for(let j=0;j<32;j++)pts.push(slerpV(a,b,j/32).multiplyScalar(1.014))}
+  const path=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x62e9ff,transparent:true,opacity:.55,depthWrite:false}));
+  const marker=new THREE.Mesh(new THREE.SphereGeometry(.012,HQ?20:10,HQ?12:8),new THREE.MeshStandardMaterial({color:0xe8ffff,emissive:0x35d9ff,emissiveIntensity:2,roughness:.18,metalness:.1}));
+  world.add(path,marker);experience={spec,path,marker,t:0,duration:Math.max(7,(spec.stops.length-1)*3.25)};
+  $('expName').textContent=spec.label;$('expFact').textContent=spec.fact;$('expBar').style.width='0%';$('expHud').hidden=false;toast('World Adventure',spec.label);blip([392,523,659,784]);
+}
+function experienceUpdate(dt){
+  if(!experience)return;const E=experience;E.t+=dt;const stops=E.spec.stops,p=clamp(E.t/E.duration,0,1),segFloat=p*(stops.length-1),seg=Math.min(stops.length-2,Math.floor(segFloat)),f=segFloat-seg;
+  const A=ll2v(stops[seg][0],stops[seg][1]),B=ll2v(stops[seg+1][0],stops[seg+1][1]),P=slerpV(A,B,smooth(0,1,f));E.marker.position.copy(P).multiplyScalar(1.018);
+  const [lat,lon]=v2ll(P),alt=lerp(stops[seg][2],stops[seg+1][2],f);EC.tLat=lat;EC.tLon=EC.lon+((((lon-EC.lon)%360)+540)%360-180);EC.tAlt=alt;EC.k=3.8;EC.vLat=EC.vLon=0;idle=0;$('expBar').style.width=(p*100).toFixed(1)+'%';
+  if(p>=1)stopExperience(true);
+}
+$('expSkip').onclick=()=>stopExperience(false);
+
 /* ================= CARD / DEX / QUESTS ================= */
 let openId=null,shownRoute=null;
 function showVehicleRoute(it){
@@ -1683,15 +1725,16 @@ function openItem(it,discoverIt){showVehicleRoute(it);openId=it.id;const card=$(
   $('cardStats').innerHTML=(it.stats||[]).map(([k,v])=>`<div class="stat"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
   const f=it.facts||[];$('cardFacts').innerHTML=f.map((x,i)=>i===f.length-1&&f.length>1?`<li class="dyk"><strong>Did you know?</strong>${esc(x)}</li>`:`<li>${esc(x)}</li>`).join('');
   const acts=[];if(mode==='earth'&&it.mode==='earth'){if(it.ride)acts.push(['ride','Ride along',1]);else if(it.lat!==undefined)acts.push(['zoom','Fly closer',0]);if(it.id==='ksc')acts.push(['launch','Launch to space',1])}
+  const xp=experienceFor(it);if(xp)acts.push(['experience',xp.label,1]);
   if(it.cat==='country'&&it.name!=='Antarctica')acts.push(['trade','See current trade data',0]);
   if(mode==='space'&&it.mode==='space'&&it.obj)acts.push(['visit','Visit',0]);if(mode==='earth'&&it.mode==='space'&&it.id!=='iss')acts.push(['launch','Launch to see it',1]);
   $('cardActions').innerHTML=acts.map(([a,l,p])=>`<button class="act${p?' primary':''}" data-a="${a}" type="button">${l}</button>`).join('');
   card.hidden=false;card.style.animation='none';card.offsetHeight;card.style.animation='';
   if(discoverIt)discover(it)}
 $('cardActions').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const it=ITEMS.get(openId);const a=b.dataset.a;
-  if(a==='zoom'){flyTo(it.lat,it.lon,.22)}else if(a==='ride'){startRide(it)}else if(a==='launch'){launch()}else if(a==='visit'){scFlyTo(it)}else if(a==='trade'){window.open('https://wits.worldbank.org/','_blank','noopener,noreferrer')}});
+  if(a==='zoom'){flyTo(it.lat,it.lon,.22)}else if(a==='ride'){startRide(it)}else if(a==='launch'){launch()}else if(a==='visit'){scFlyTo(it)}else if(a==='trade'){window.open('https://wits.worldbank.org/','_blank','noopener,noreferrer')}else if(a==='experience'){startExperience(it)}});
 $('cardClose').onclick=()=>{$('card').hidden=true;openId=null;showVehicleRoute(null)};
-function discover(it){if(found.has(it.id))return;found.add(it.id);save();updateCounts();
+function discover(it){if(found.has(it.id))return;const before=discoveryCount();found.add(it.id);save();updateCounts();milestoneReached(before,discoveryCount());
   if(it.cat==='vehicle')return;if(it.cat==='landmark'){splash(it);blip([523,659,784,1047])}else{toast('New discovery!',it.name);blip([660,880,1320])}checkQuest(it.id)}
 function splash(it){const s=$('splash');$('spEy').textContent=it.natural?'Natural wonder discovered':'Wonder discovered';$('spName').textContent=it.name;$('spMeta').textContent=[it.place,!it.natural&&YEARS[it.id]?'Built '+YEARS[it.id]:''].filter(Boolean).join(' · ');$('spQuote').textContent=it.facts[0];s.hidden=false;s.style.animation='none';void s.offsetHeight;s.style.animation='';clearTimeout(splash.t);splash.t=setTimeout(()=>s.hidden=true,4200)}
 $('splash').onclick=()=>$('splash').hidden=true;
@@ -1706,9 +1749,23 @@ $('qHint').onclick=()=>{const q=QUESTS[questIdx];if(!q)return;const it=ITEMS.get
 let toastT;function toast(ey,name){$('toastEy').textContent=ey;$('toastName').textContent=name;const t=$('toast');t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
 const DEXCATS=[['landmark','Wonders'],['animal','Animals'],['country','Countries'],['island','Islands'],['city','Cities'],['biblical','Biblical Atlas'],['state','U.S. States'],['space','Space']];let dexCat='landmark';
 function countable(){return[...ITEMS.values()].filter(i=>i.cat!=='vehicle')}
+function discoveryCount(){const ids=new Set(countable().map(i=>i.id));let n=0;for(const id of found)if(ids.has(id))n++;return n}
+function nextMilestone(n,total){if(n>=total)return total;if(n<5)return 5;if(n<10)return 10;return Math.min(total,Math.ceil((n+1)/10)*10)}
+function updateMilestone(){
+  const total=countable().length,n=discoveryCount(),goal=nextMilestone(n,total),prev=n<5?0:n<10?5:Math.max(10,goal-10);
+  $('msLabel').textContent=n>=total?'Explorer collection complete':'Next explorer milestone';
+  $('msCount').textContent=n>=total?total+' / '+total:n+' / '+goal;
+  $('msBar').style.width=(n>=total?100:clamp((n-prev)/Math.max(1,goal-prev),0,1)*100).toFixed(1)+'%';
+}
+function milestoneReached(before,after){
+  const total=countable().length,candidates=[5,10];for(let n=20;n<=total;n+=10)candidates.push(n);
+  const hit=candidates.find(n=>before<n&&after>=n);if(!hit)return;
+  const title=hit>=100?'World Scholar':hit>=50?'Globe Trotter':hit>=20?'Pathfinder':'Trailblazer';
+  setTimeout(()=>{toast('Milestone unlocked',title+' · '+hit+' discoveries');blip([523,659,784,1047,1319])},450);
+}
 function updateCounts(){const all=countable();$('dexCount').textContent=`${all.filter(i=>found.has(i.id)).length}/${all.length}`;
   const n=c=>all.filter(i=>i.cat===c).length;$('stats').textContent=`${n('landmark')} wonders · ${n('country')} countries · ${n('island')} islands · ${n('city')} cities · ${n('animal')} animals · ${n('biblical')} biblical sites · ${n('state')} states · ${n('space')} space stops`;
-  document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('seen',found.has(b.dataset.id)))}
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('seen',found.has(b.dataset.id)));updateMilestone()}
 function renderDex(){const all=countable();$('dexSheet').dataset.cat=dexCat;
   $('dexTabs').innerHTML=DEXCATS.map(([c,l])=>{const xs=all.filter(i=>i.cat===c);return`<button class="tab${c===dexCat?' on':''}" data-cat="${c}" data-c="${c}" type="button">${l} <b>${xs.filter(i=>found.has(i.id)).length}/${xs.length}</b></button>`}).join('');
   const xs=all.filter(i=>i.cat===dexCat);$('dexBar').style.width=(xs.filter(i=>found.has(i.id)).length/xs.length*100)+'%';
@@ -1847,6 +1904,7 @@ function resize(){const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight);rende
 addEventListener('resize',resize);
 const shadowCenter=new V3(),Ld=new V3();
 function updateEarth(dt,t){
+  if(experience)experienceUpdate(dt);
   movers.forEach(m=>m.update(dt,t));animators.forEach(f=>f(dt,t));smokeUpdate(dt);
   if(launchState)launchUpdate(dt,t);else if(ride)rideCam();else{earthCamUpdate(dt);frameCamera()}
   // light from camera's upper-left
