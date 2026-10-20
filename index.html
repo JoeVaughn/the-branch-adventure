@@ -438,7 +438,7 @@ const world=new THREE.Group();earthScene.add(world);
 
 /* ================= MATERIAL / PRIMITIVE KIT ================= */
 const matCache=new Map();
-const DN_MODEL=new THREE.Vector3(9,31,.12);
+const DN_MODEL=new THREE.Vector3(HQ?16:9,HQ?58:31,HQ?.18:.12);
 function mat(c,o){const k=c+(o?JSON.stringify(o):'');let m=matCache.get(k);if(!m){const p=Object.assign({},o||{}),flat=!!p.flat;delete p.flat;m=new THREE.MeshStandardMaterial(Object.assign({color:LC(c),roughness:.6,metalness:0,flatShading:flat},p));if(HQ&&!p.transparent)detailNoise(m,DN_MODEL);matCache.set(k,m)}return m}
 function mesh(geo,c,x=0,y=0,z=0,o){const t=geo.type,pr=geo.parameters||{},flat=t==='IcosahedronGeometry'||t==='DodecahedronGeometry'||((t==='ConeGeometry'||t==='CylinderGeometry')&&pr.radialSegments<=6);const m=new THREE.Mesh(geo,mat(c,flat?Object.assign({flat:true},o||{}):o));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;return m}
 const B=(w,h,d,c,x,y,z)=>mesh(new THREE.BoxGeometry(w,h,d),c,x,y,z);
@@ -446,8 +446,8 @@ const segUp=s=>HQ&&s>=7?Math.min(64,Math.max(24,s*2)):s;
 const C=(rt,rb,h,c,x,y,z,s=8)=>mesh(new THREE.CylinderGeometry(rt,rb,h,segUp(s)),c,x,y,z);
 const K=(r,h,c,x,y,z,s=8)=>mesh(new THREE.ConeGeometry(r,h,segUp(s)),c,x,y,z);
 const S=(r,c,x,y,z,ws=8,hs=6)=>mesh(new THREE.SphereGeometry(r,HQ?(ws<=6?14:Math.min(48,ws*3)):ws,HQ?(ws<=6?10:Math.min(32,hs*3)):hs),c,x,y,z);
-const WINTEX={};function winTex(rows){if(WINTEX[rows])return WINTEX[rows];const cv=document.createElement('canvas');cv.width=64;cv.height=256;const x=cv.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,64,256);const rh=256/rows;
-  for(let r=0;r<rows;r++)for(let k=0;k<4;k++){const lit=rand()<.12;x.fillStyle=lit?'#fff3c8':`rgb(${140+rand()*30|0},${165+rand()*30|0},${200+rand()*35|0})`;x.fillRect(4+k*15,r*rh+rh*.22,11,rh*.56)}return WINTEX[rows]=ctex(cv)}
+const WINTEX={};function winTex(rows){if(WINTEX[rows])return WINTEX[rows];const W=HQ?256:64,H=HQ?1024:256,cols=HQ?8:4,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');x.fillStyle='#f5f7fa';x.fillRect(0,0,W,H);const rh=H/rows,cw=W/cols;
+  for(let r=0;r<rows;r++)for(let k=0;k<cols;k++){const lit=rand()<.14;x.fillStyle=lit?'#fff1b2':`rgb(${128+rand()*34|0},${154+rand()*36|0},${188+rand()*42|0})`;x.fillRect(k*cw+cw*.18,r*rh+rh*.18,cw*.64,rh*.58);if(HQ){x.fillStyle='rgba(20,35,55,.22)';x.fillRect(k*cw+cw*.12,r*rh+rh*.82,cw*.76,Math.max(1,rh*.05))}}const t=ctex(cv);t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;return WINTEX[rows]=t}
 function tower(w,h,c,x,z){const rows=h>.7?24:h>.4?14:7,key='tw'+c+rows;let m=matCache.get(key);if(!m){m=new THREE.MeshStandardMaterial({color:LC(c),map:winTex(rows),roughness:.3,metalness:.3});matCache.set(key,m)}
   const roof=mat(c),me=new THREE.Mesh(new THREE.BoxGeometry(w,h,w),[m,m,roof,roof,m,m]);me.position.set(x,h/2,z);me.castShadow=me.receiveShadow=true;return me}
 const D=(r,c,x,y,z,det=0)=>mesh(new THREE.IcosahedronGeometry(r,det),c,x,y,z);
@@ -1081,7 +1081,7 @@ function noShadow(o){o.traverse(m=>{if(m.isMesh){m.castShadow=false}})}
 
 function buildEarth(){
   // land
-  const LW=HQ?480:288,LH=LW/2,geo=new THREE.SphereGeometry(1,LW,LH),pos=geo.attributes.position,cnt=pos.count,col=new Float32Array(cnt*3),v=new V3();
+  const LW=HQ?560:288,LH=LW/2,geo=new THREE.SphereGeometry(1,LW,LH),pos=geo.attributes.position,cnt=pos.count,col=new Float32Array(cnt*3),v=new V3();
   const c=new THREE.Color(),SAND=new THREE.Color('#f0dca0'),ROCK=new THREE.Color('#a39a86'),SNOW=new THREE.Color('#fbfdff'),SH=new THREE.Color('#9fe3cf'),SD=new THREE.Color('#2a6f9e');
   for(let i=0;i<cnt;i++){v.fromBufferAttribute(pos,i).normalize();const t=terrain(v);pos.setXYZ(i,v.x*t.r,v.y*t.r,v.z*t.r);
     if(t.m<.5){c.copy(SH).lerp(SD,smooth(0,.7,1-t.m*2))}
@@ -1094,7 +1094,7 @@ function buildEarth(){
   const lm=new THREE.MeshStandardMaterial({vertexColors:true,roughness:HQ?.88:.97,metalness:0,envMapIntensity:HQ?.9:.5,dithering:true});if(HQ)detailNoise(lm,new THREE.Vector3(240,900,.22));
   landMesh=new THREE.Mesh(geo,lm);landMesh.receiveShadow=true;landMesh.castShadow=HQ;world.add(landMesh);
   // water
-  const WS=HQ?384:240,wg=new THREE.SphereGeometry(1,WS,WS/2),wp=wg.attributes.position,wc=new Float32Array(wp.count*3),DEEP=new THREE.Color('#1c5cab'),MID=new THREE.Color('#2a8ad0'),SHAL=new THREE.Color('#47cbe0'),FOAM=new THREE.Color('#d2f7ef');
+  const WS=HQ?448:240,wg=new THREE.SphereGeometry(1,WS,WS/2),wp=wg.attributes.position,wc=new Float32Array(wp.count*3),DEEP=new THREE.Color('#1c5cab'),MID=new THREE.Color('#2a8ad0'),SHAL=new THREE.Color('#47cbe0'),FOAM=new THREE.Color('#d2f7ef');
   for(let i=0;i<wp.count;i++){v.fromBufferAttribute(wp,i);const[la,lo]=v2ll(v);const s=smooth(.02,.5,samp(MWB,la,lo));c.copy(DEEP).lerp(MID,smooth(0,.35,s)).lerp(SHAL,smooth(.3,1,s)).lerp(FOAM,smooth(.4,.5,samp(MS,la,lo))*.55);lin(c);wc[i*3]=c.r;wc[i*3+1]=c.g;wc[i*3+2]=c.b}
   wg.setAttribute('color',new THREE.BufferAttribute(wc,3));
   const wm=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.86,roughness:HQ?.12:.3,metalness:HQ?.1:.02,dithering:true});
@@ -1187,6 +1187,21 @@ function buildBiblicalAtlas(){
 }
 const US_STATES=[["Alabama","AL","Montgomery",32.3777,-86.3006,"The Gulf Coast and Appalachian foothills make Alabama's landscapes diverse."],["Alaska","AK","Juneau",58.3019,-134.4197,"Denali is North America's highest mountain; Alaska also has enormous glaciers."],["Arizona","AZ","Phoenix",33.4484,-112.074,"The Grand Canyon reveals nearly two billion years of geological history."],["Arkansas","AR","Little Rock",34.7465,-92.2896,"The Ozark and Ouachita Mountains are known for forests and rivers."],["California","CA","Sacramento",38.5767,-121.4934,"California includes the Sierra Nevada, giant sequoias, and Death Valley."],["Colorado","CO","Denver",39.7392,-104.9903,"Colorado has dozens of Rocky Mountain peaks above 14,000 feet."],["Connecticut","CT","Hartford",41.7658,-72.6734,"The Connecticut River shapes one of New England's major valleys."],["Delaware","DE","Dover",39.1582,-75.5244,"Delaware was the first state to ratify the U.S. Constitution."],["Florida","FL","Tallahassee",30.4383,-84.2807,"The Everglades protect wetlands, alligators, manatees, and many birds."],["Georgia","GA","Atlanta",33.749,-84.388,"Georgia stretches from the Blue Ridge Mountains to Atlantic marshlands."],["Hawaii","HI","Honolulu",21.3099,-157.8581,"Hawaiʻi's volcanic islands formed above a hotspot in the Pacific Plate."],["Idaho","ID","Boise",43.615,-116.2023,"Idaho contains the Snake River Plain and rugged Sawtooth Mountains."],["Illinois","IL","Springfield",39.7817,-89.6501,"Illinois combines rich prairie farmland with the shores of Lake Michigan."],["Indiana","IN","Indianapolis",39.7684,-86.1581,"Indiana's dunes along Lake Michigan protect unusual sand and wetland habitats."],["Iowa","IA","Des Moines",41.5868,-93.625,"Iowa's fertile prairie soils make it a major corn and soybean producer."],["Kansas","KS","Topeka",39.0473,-95.6752,"Kansas lies in the Great Plains, known for grasslands and agriculture."],["Kentucky","KY","Frankfort",38.2009,-84.8733,"Mammoth Cave is part of the world's longest known cave system."],["Louisiana","LA","Baton Rouge",30.4515,-91.1871,"The Mississippi River delta supports important wetlands and wildlife."],["Maine","ME","Augusta",44.3106,-69.7795,"Maine's rocky coast and Acadia National Park are shaped by glaciers."],["Maryland","MD","Annapolis",38.9784,-76.4922,"The Chesapeake Bay is North America's largest estuary."],["Massachusetts","MA","Boston",42.3601,-71.0589,"Massachusetts is known for its Atlantic coast and early American history."],["Michigan","MI","Lansing",42.7325,-84.5555,"Michigan touches four Great Lakes and has two large peninsulas."],["Minnesota","MN","Saint Paul",44.9537,-93.09,"Minnesota is known for thousands of lakes and the Mississippi River headwaters."],["Mississippi","MS","Jackson",32.2988,-90.1848,"The Mississippi Delta is a major alluvial plain with a rich musical heritage."],["Missouri","MO","Jefferson City",38.5767,-92.1735,"The Missouri and Mississippi rivers meet near Saint Louis."],["Montana","MT","Helena",46.5884,-112.0245,"Glacier National Park preserves dramatic peaks and alpine wildlife."],["Nebraska","NE","Lincoln",40.8136,-96.7026,"The Sandhills are one of the world's largest grass-stabilized dune regions."],["Nevada","NV","Carson City",39.1638,-119.7674,"Nevada has vast desert basins, mountain ranges, and Lake Tahoe."],["New Hampshire","NH","Concord",43.2081,-71.5376,"The White Mountains include Mount Washington, known for severe weather."],["New Jersey","NJ","Trenton",40.2206,-74.7597,"New Jersey has Atlantic barrier islands and the Pine Barrens ecosystem."],["New Mexico","NM","Santa Fe",35.687,-105.9378,"New Mexico combines high deserts, volcanic terrain, and ancient Pueblo history."],["New York","NY","Albany",42.6526,-73.7562,"The Adirondacks and Niagara Falls are major natural landmarks."],["North Carolina","NC","Raleigh",35.7796,-78.6382,"North Carolina runs from Appalachian peaks to Outer Banks barrier islands."],["North Dakota","ND","Bismarck",46.8083,-100.7837,"Theodore Roosevelt National Park preserves North Dakota badlands."],["Ohio","OH","Columbus",39.9612,-82.9988,"Lake Erie, forests, and glacial plains shape Ohio's geography."],["Oklahoma","OK","Oklahoma City",35.4676,-97.5164,"Oklahoma includes prairie, forests, and portions of the ancient Wichita Mountains."],["Oregon","OR","Salem",44.9429,-123.0351,"Oregon's Cascade volcanoes include Mount Hood and Crater Lake."],["Pennsylvania","PA","Harrisburg",40.2732,-76.8867,"Pennsylvania's Appalachian ridges are rich in forests and waterways."],["Rhode Island","RI","Providence",41.824,-71.4128,"Rhode Island is the smallest state and has a deeply indented coastline."],["South Carolina","SC","Columbia",34.0007,-81.0348,"South Carolina includes Atlantic marshes and the Blue Ridge foothills."],["South Dakota","SD","Pierre",44.3683,-100.351,"The Black Hills and Badlands reveal contrasting mountain and prairie landscapes."],["Tennessee","TN","Nashville",36.1627,-86.7816,"Great Smoky Mountains National Park is famous for biodiversity."],["Texas","TX","Austin",30.2672,-97.7431,"Texas spans Gulf Coast marshes, plains, deserts, and the Guadalupe Mountains."],["Utah","UT","Salt Lake City",40.7608,-111.891,"Utah's red-rock arches, canyons, and Great Salt Lake are geological landmarks."],["Vermont","VT","Montpelier",44.2601,-72.5754,"The Green Mountains give Vermont its name and forested character."],["Virginia","VA","Richmond",37.5407,-77.436,"Virginia stretches from the Blue Ridge Mountains to the Chesapeake Bay."],["Washington","WA","Olympia",47.0379,-122.9007,"Washington includes Mount Rainier, temperate rainforests, and Puget Sound."],["West Virginia","WV","Charleston",38.3498,-81.6326,"The New River Gorge and Appalachians define much of the state's terrain."],["Wisconsin","WI","Madison",43.0731,-89.4012,"Glaciers carved Wisconsin's lakes and left distinctive landforms."],["Wyoming","WY","Cheyenne",41.14,-104.8202,"Yellowstone features geysers, hot springs, and abundant wildlife."]];
 
+let countryBorderLines=null;
+function loadCountryBorders(){
+  const t0=performance.now();
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(r=>{if(!r.ok)throw Error('World Atlas HTTP '+r.status);return r.json()})
+    .then(topology=>{
+      if(!topology||!topology.transform||!Array.isArray(topology.arcs))throw Error('Invalid World Atlas topology');
+      const {scale,translate}=topology.transform,positions=[],v=new V3();
+      for(const arc of topology.arcs){let x=0,y=0,prev=null;for(const step of arc){x+=step[0];y+=step[1];const lon=x*scale[0]+translate[0],lat=y*scale[1]+translate[1];v.copy(ll2v(lat,lon));const rr=Math.max(1.006,terrain(v).r+.0045),here=v.multiplyScalar(rr).clone();if(prev)positions.push(prev.x,prev.y,prev.z,here.x,here.y,here.z);prev=here}}
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+      countryBorderLines=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0xa5dff4,transparent:true,opacity:.52,depthWrite:false}));
+      countryBorderLines.name='World country borders';countryBorderLines.frustumCulled=false;world.add(countryBorderLines);
+      perfStats.countryBordersMs=Math.round(performance.now()-t0);
+    }).catch(e=>{perfStats.countryBordersError=String(e.message||e);console.warn('Country borders unavailable',e)});
+}
 let stateMarkerGroup=null,stateBorderLines=null;
 function buildUSStates(){
   stateMarkerGroup=new THREE.Group();stateMarkerGroup.name='US state capitals';world.add(stateMarkerGroup);
@@ -1346,8 +1361,8 @@ function buildIslands(){const NP=HQ?1100:500,palms=new THREE.InstancedMesh(palmG
   palms.count=np;if(palms.instanceColor)palms.instanceColor.needsUpdate=true;world.add(palms)}
 
 /* ================= CITIES (Civ-style districts + banners) ================= */
-const WIN=(()=>{const cv=document.createElement('canvas');cv.width=cv.height=64;const x=cv.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,64,64);for(let r=0;r<4;r++)for(let k=0;k<4;k++){x.fillStyle=rand()<.15?'#ffe9a8':(r+k)%3?'#6f8fb0':'#7d9cbc';x.fillRect(3+k*16,3+r*16,10,10)}const t=ctex(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t})();
-const CITY_WIN=new THREE.MeshStandardMaterial({vertexColors:true,map:WIN,roughness:.35,metalness:.22}),CITY_PLAIN=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.75});
+const WIN=(()=>{const S=HQ?256:64,N=HQ?8:4,cv=document.createElement('canvas');cv.width=cv.height=S;const x=cv.getContext('2d');x.fillStyle='#f6f8fb';x.fillRect(0,0,S,S);const cell=S/N;for(let r=0;r<N;r++)for(let k=0;k<N;k++){x.fillStyle=rand()<.15?'#ffe9a8':(r+k)%3?'#6286aa':'#7899ba';x.fillRect(k*cell+cell*.16,r*cell+cell*.16,cell*.62,cell*.62);if(HQ){x.fillStyle='rgba(20,38,58,.25)';x.fillRect(k*cell+cell*.1,r*cell+cell*.84,cell*.78,Math.max(1,cell*.05))}}const t=ctex(cv);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter;return t})();
+const CITY_WIN=new THREE.MeshStandardMaterial({vertexColors:true,map:WIN,roughness:.3,metalness:.28,envMapIntensity:HQ?1.05:.65}),CITY_PLAIN=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.72,envMapIntensity:HQ?.85:.5});if(HQ){detailNoise(CITY_WIN,new THREE.Vector3(22,86,.07));detailNoise(CITY_PLAIN,new THREE.Vector3(18,70,.1))}
 const cityBanners=[];
 const popStr=p=>p>=10?Math.round(p)+'M':p>=1?p.toFixed(1)+'M':Math.round(p*1000)+'K';
 function buildCities(cityRows=CITIES){const lmAvoid=[...ITEMS.values()].filter(i=>i.cat==='landmark').map(i=>({id:i.id,p:ll2v(i.lat,i.lon),r2:Math.pow(i.footR+.002,2)}));
@@ -1382,7 +1397,7 @@ function buildCities(cityRows=CITIES){const lmAvoid=[...ITEMS.values()].filter(i
     cityBanners.push({el,n:C0.clone(),p:C0.clone().multiplyScalar(base+(lm?.03:.02))})})}
 
 /* ================= VEHICLES (realistic) ================= */
-const VMAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.38,metalness:.12}),VMAT2=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.6,side:THREE.DoubleSide});
+const VMAT=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.32,metalness:.18,envMapIntensity:HQ?1.1:.6}),VMAT2=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.55,side:THREE.DoubleSide,envMapIntensity:HQ?.9:.5});if(HQ){detailNoise(VMAT,new THREE.Vector3(28,90,.08));detailNoise(VMAT2,new THREE.Vector3(20,64,.06))}
 const FADE=(()=>{const cv=document.createElement('canvas');cv.width=8;cv.height=128;const x=cv.getContext('2d'),g=x.createLinearGradient(0,0,0,128);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(255,255,255,1)');x.fillStyle=g;x.fillRect(0,0,8,128);return new THREE.CanvasTexture(cv)})();
 function trail(w,L,x,y,z,op){const geo=new THREE.PlaneGeometry(w,L);geo.rotateX(-Math.PI/2);geo.translate(x,y,z-L/2);return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:FADE,transparent:true,depthWrite:false,opacity:op,side:THREE.DoubleSide}))}
 function vmesh(parts,m=VMAT){const me=new THREE.Mesh(mergeParts(parts),m);me.castShadow=me.receiveShadow=true;return me}
@@ -1843,6 +1858,7 @@ function updateEarth(dt,t){
   const sc=sunL.shadow.camera;if(sc.right!==s){sc.left=-s;sc.right=s;sc.top=s;sc.bottom=-s;sc.updateProjectionMatrix()}
   if(stateMarkerGroup)stateMarkerGroup.visible=mode==='earth'&&!launchState&&EC.alt<1.15;
   if(stateBorderLines)stateBorderLines.visible=mode==='earth'&&!launchState&&EC.alt<2.1;
+  if(countryBorderLines)countryBorderLines.visible=mode==='earth'&&!launchState&&EC.alt<2.8;
   // cull far side
   const cd=camera.position.clone().normalize(),hor=1/camera.position.length()-.2;
   for(const o of pickables){const p=o.position;if(!p)continue;const l=p.length();if(l<.5)continue;o.visible=p.dot(cd)/l>hor}
@@ -1879,7 +1895,7 @@ document.addEventListener('visibilitychange',()=>{
 async function boot(){
   await wait(30);paintMaps();$('loadMsg').textContent='Raising mountains…';await wait(20);
   buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
-  buildPlaces();buildBiblicalAtlas();buildUSStates();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
+  buildPlaces();buildBiblicalAtlas();buildUSStates();loadCountryBorders();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   // First interactive scene before decorative terrain instancing.
   if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
   // Yield to the compositor, then add distant decorative detail progressively.
