@@ -1198,7 +1198,7 @@ const US_STATES=[["Alabama","AL","Montgomery",32.3777,-86.3006,"The Gulf Coast a
 let countryBorderLines=null;
 function loadCountryBorders(){
   const t0=performance.now();
-  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+  fetch(`https://cdn.jsdelivr.net/npm/world-atlas@2/countries-${HQ?'50m':'110m'}.json`)
     .then(r=>{if(!r.ok)throw Error('World Atlas HTTP '+r.status);return r.json()})
     .then(topology=>{
       if(!topology||!topology.transform||!Array.isArray(topology.arcs))throw Error('Invalid World Atlas topology');
