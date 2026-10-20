@@ -1212,6 +1212,7 @@ function loadCountryBorders(){
 }
 let stateMarkerGroup=null,stateBorderLines=null;
 function buildUSStates(){
+  perfStats.stateBordersStarted=performance.now();
   stateMarkerGroup=new THREE.Group();stateMarkerGroup.name='US state capitals';world.add(stateMarkerGroup);
   const geometry=new THREE.OctahedronGeometry(.38,0);
   const material=new THREE.MeshStandardMaterial({color:0x8ee9ff,emissive:0x1b7594,emissiveIntensity:.5,metalness:.28,roughness:.38});
@@ -1254,10 +1255,21 @@ function drawUSStateBoundaries(topology){
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
   stateBorderLines=new THREE.LineSegments(geo,new THREE.LineBasicMaterial({color:0x9eeaff,transparent:true,opacity:.72,depthWrite:false}));
   stateBorderLines.name='US Census-derived state borders';stateBorderLines.frustumCulled=false;
-  world.add(stateBorderLines);window.branchUSStates={states:US_STATES.length,boundaries:true,segments:positions.length/6};
+  world.add(stateBorderLines);perfStats.stateBordersMs=Math.round(performance.now()-(perfStats.stateBordersStarted||performance.now()));window.branchUSStates={states:US_STATES.length,boundaries:true,segments:positions.length/6};
+}
+function enhanceLandmarkDesign(model,id){
+  model.traverse(o=>{if(!o.isMesh)return;const mats=Array.isArray(o.material)?o.material:[o.material];for(const m of mats){if(!m)return;m.dithering=true;if('envMapIntensity' in m)m.envMapIntensity=HQ?1.05:.62;if(m.map){m.map.anisotropy=MAXANISO;m.map.generateMipmaps=true;m.map.minFilter=THREE.LinearMipmapLinearFilter}}});
+  if(!HQ)return;
+  const accents={
+    eiffel:[0,1.53,0,0xb7f5ff],liberty:[.12,1.2,0,0xffb640],burj:[0,1.73,0,0xd7f8ff],
+    petronas:[0,1.32,0,0xd7f8ff],cntower:[0,1.25,0,0xff7070],spaceneedle:[0,1.08,0,0xa8ecff]
+  },a=accents[id];if(!a)return;
+  const mat=new THREE.MeshStandardMaterial({color:a[3],emissive:a[3],emissiveIntensity:1.6,roughness:.12,metalness:.05,transparent:true,opacity:.92});
+  const orb=new THREE.Mesh(new THREE.SphereGeometry(.018,16,10),mat);orb.position.set(a[0],a[1],a[2]);model.add(orb);
+  const phase=rand()*TAU;animators.push((dt,t)=>{const pulse=.72+.28*Math.sin(t*2.4+phase);mat.emissiveIntensity=1.1+pulse*1.5;orb.scale.setScalar(.8+pulse*.32)});
 }
 function buildPlaces(){
-  LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id](),natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
+  LANDMARKS.forEach(([id,name,place,lat,lon,s,facts,opt={}])=>{const model=MODELS[id]();enhanceLandmarkDesign(model,id);const natural=NATURAL.has(id);let obj=model;if(!natural&&!opt.water)obj=wonderPlinth(model);else{const bx=new THREE.Box3().setFromObject(model);model.userData.footR=Math.max(-bx.min.x,bx.max.x,-bx.min.z,bx.max.z)}placeOn(obj,lat,lon,s,{r:opt.water?1.001:undefined,yaw:id==='ksc'?0:undefined});if(opt.noShadow)noShadow(obj);
     reg({id,cat:'landmark',name,place,facts,lat,lon,obj,mode:'earth',natural,footR:(obj.userData.footR||.6)*s,stats:natural?[['Type','Natural wonder']]:YEARS[id]?[['Built',YEARS[id]]]:null});
     if(obj.userData.spin)animators.push(dt=>obj.userData.spin.forEach(h=>h.rotation.z+=dt*1.6));
     if(obj.userData.mist)animators.push((dt,t)=>obj.userData.mist.forEach((m,i)=>{m.position.y=.33+Math.sin(t*1.5+i)*.05;m.scale.setScalar(1+Math.sin(t*2+i)*.15)}));
@@ -1924,7 +1936,7 @@ function updateEarth(dt,t){
   WATER_T.value=t;WAVE_A.value=.035*smooth(.75,.22,ride?.3:EC.alt);const hgt=camera.position.length()-1,day=smooth(.24,.04,hgt);earthScene.background.copy(BG_SPACE).lerp(BG_SKY,day);earthScene.fog.color.copy(earthScene.background).convertSRGBToLinear();earthScene.fog.density=day*.8;starPts.material.opacity=1-day;
 }
 const clock=new THREE.Clock();let T=0,rafId=0,frameSample=0,frameSeconds=0,adjustCooldown=0;
-const perfStats={fps:0,dpr:renderDPR,frames:0,drawCalls:0,triangles:0};
+const PERF_START=performance.now();const perfStats={fps:0,dpr:renderDPR,frames:0,drawCalls:0,triangles:0,bootMs:0,spaceReadyMs:0,countryBordersMs:0,stateBordersMs:0};
 window.branchAdventurePerf=Object.freeze({snapshot:()=>({...perfStats,mode,quality})});
 function loop(){
   if(document.hidden){rafId=0;return}
@@ -1955,7 +1967,7 @@ async function boot(){
   buildEarth();buildAtmosphere();buildLight();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
   buildPlaces();buildBiblicalAtlas();buildUSStates();loadCountryBorders();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   // First interactive scene before decorative terrain instancing.
-  if(!document.hidden)loop();const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
+  if(!document.hidden)loop();perfStats.bootMs=Math.round(performance.now()-PERF_START);const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
   // Yield to the compositor, then add distant decorative detail progressively.
   requestAnimationFrame(()=>setTimeout(()=>{
     try{buildMountains();requestAnimationFrame(()=>setTimeout(()=>{try{buildTrees()}catch(e){console.warn('Trees unavailable',e)}},0))}
@@ -1987,7 +1999,7 @@ function ensureSpaceReady(){
   spacePromise=new Promise((resolve,reject)=>requestAnimationFrame(()=>setTimeout(()=>{
     try{resolve(buildSpace())}catch(error){reject(error)}
   },0))).then(()=>{
-    buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;
+    buildSpaceLabels();buildStrip();updateCounts();spaceReady=true;perfStats.spaceReadyMs=Math.round(performance.now()-PERF_START);
     if(location.hash==='#space')enterSpace();
   }).catch(error=>{console.error('Space initialization failed',error);toast('Space','Space content could not load');throw error});
   return spacePromise;
