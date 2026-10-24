@@ -1,7 +1,7 @@
 const {chromium}=require('playwright');
 const fs=require('node:fs'),assert=require('node:assert/strict');
 // Inject test access into the served response only; the shipped page exposes no mutation API.
-const access=`window.audit={ITEMS,QUESTS,LANDMARKS,ANIMALS,CITIES,ISLANDS,US_STATES,VEHICLES,COUNTRIES,BIBLICAL_SITES,DEXCATS,
+const access=`window.audit={ITEMS,DISCOVERY_IDS,QUESTS,LANDMARKS,ANIMALS,CITIES,ISLANDS,US_STATES,VEHICLES,COUNTRIES,BIBLICAL_SITES,DEXCATS,
  openItem,discover,renderDex,renderQuest,updateCounts,startExperience,stopExperience,experienceFor,experienceUpdate,startRide,exitRide,updateEarth,launch,launchUpdate,ensureSpaceReady,enterSpace,goEarth,scFlyTo,spaceCamUpdate,drawUSStateBoundaries,
  state:()=>({mode,returning,experience:!!experience,ride:!!ride,launch:launchState?.phase,spaceReady,simulationTime:T,found:[...found],questIdx,quality,spaceItems:spaceItems.length,labels:sLabels.length,picks:spacePick.length,frames:perfStats.frames}),
  selectCategory:c=>{dexCat=c;renderDex()}, camera:()=>({alt:EC.tAlt,dist:SC.tDist,focus:SC.focus,fly:SC.fly?.it.id}),
@@ -18,11 +18,12 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
  const page=await browser.newPage({viewport:{width:1000,height:720}});page.setDefaultTimeout(60000);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&/THREE.WebGLProgram|VALIDATE_STATUS|shader error|CONTEXT_LOST/i.test(m.text()))errors.push(m.text())});
  await page.route('http://127.0.0.1:8000/',route=>route.fulfill({contentType:'text/html',body:html}));
- await page.addInitScript(()=>{if(!sessionStorage.auditSeeded){localStorage.setItem('tinyplanet.v1','{"ql":"fast","q":"3","found":["c-brazil",null,2],"snd":false}');sessionStorage.auditSeeded='1'}});
+ await page.addInitScript(()=>{if(!sessionStorage.auditSeeded){localStorage.setItem('tinyplanet.v1','{"ql":"fast","q":"3","found":["c-brazil","saturn",null,2],"snd":false}');sessionStorage.auditSeeded='1'}});
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.branchAdventurePerf?.snapshot().bootMs>0,null,{timeout:90000});
  assert.equal(await page.getAttribute('#zSound','aria-label'),'Sound off');
  assert.equal(await page.evaluate(()=>audit.state().questIdx),0);await page.waitForFunction(()=>audit.state().simulationTime>0);console.log('PASS: visibility change before boot does not freeze simulation');
+ assert.equal(await page.locator('#dexCount').innerText(),'2/391');
  // Real UI: every Dex tab, empty/locked categories, atlas, dismissals, zoom, audio.
  await page.locator('#btnDex').click();
  for(const cat of ['landmark','animal','country','island','city','biblical','state','space']){
@@ -54,11 +55,14 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
      it.obj?.traverse(o=>{if(o.geometry?.attributes.position){for(const n of o.geometry.attributes.position.array)if(!Number.isFinite(n))fail('Non-finite model '+it.id)}});
    }
    for(const q of a.QUESTS)if(!a.ITEMS.has(q[0]))fail('Missing quest target '+q[0]);
+   if(all.filter(it=>it.cat!=='vehicle').length!==a.DISCOVERY_IDS.size)fail('Catalog total differs from loaded profiles');for(const id of a.DISCOVERY_IDS)if(!a.ITEMS.has(id))fail('Missing catalog entry '+id);
+   for(const id of ['hawaii','maui','oahu','kauai','molokai','lanai','niihau','kahoolawe'])if(!a.ITEMS.get('isl-'+id).place.includes('Pacific'))fail('Hawaiian island mislabeled '+id);
    let tours=0,rides=0;
    for(const it of all){if(a.experienceFor(it)){a.startExperience(it);if(!a.state().experience)fail('Tour '+it.id);for(let t=0;t<30;t++)a.experienceUpdate(1);if(a.state().experience)fail('Tour did not finish '+it.id);tours++}
      if(it.ride){a.updateEarth(.016,1);a.startRide(it);a.updateEarth(.016,1);if(!a.state().ride)fail('Ride '+it.id);a.exitRide();rides++}}
    const ids=a.QUESTS.slice(0,3).map(q=>q[0]);a.questFound(ids);if(a.state().questIdx!==3)fail('Quest reconciliation');if(JSON.parse(localStorage.getItem('tinyplanet.v1')).q!==3)fail('Quest not persisted');
    a.questFound([...a.ITEMS.values()].filter(i=>i.cat!=='vehicle').slice(0,5).map(i=>i.id));if(!document.querySelector('#msCount').textContent.includes('/ 10'))fail('Milestone 5 -> 10');
+   const collection=[...a.DISCOVERY_IDS];a.questFound(collection.slice(0,390));if(document.querySelector('#msBar').style.width!=='0%')fail('Final milestone interval');a.questFound(collection);if(!document.querySelector('#msLabel').textContent.includes('complete'))fail('Completion label');
    for(const topology of [null,{}, {objects:{states:{}},transform:{}}]){let caught=false;try{a.drawUSStateBoundaries(topology)}catch{caught=true}if(!caught)fail('Invalid boundaries silently accepted')}
    document.querySelector('#cardClose').click();return {profiles:all.length,counts,tours,rides};
  });

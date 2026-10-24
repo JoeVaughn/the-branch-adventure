@@ -1442,7 +1442,7 @@ function buildIslands(){const NP=HQ?1100:500,palms=new THREE.InstancedMesh(palmG
     const d=ll2v(lat,lon),no=north(lat*DEG,lon*DEG),ea=new V3().crossVectors(no,d);g.position.copy(d).multiplyScalar(.9995);orient(g,d,no.clone().negate());world.add(g);
     const nP=clamp(Math.round(rx*ry*120),2,26);for(let k=0;k<nP&&np<NP;k++){const th=rand()*TAU,rho=Math.sqrt(rand())*.6,[x,y]=toXY(Math.cos(th)*rx*rho,Math.sin(th)*ry*rho);
       const p=d.clone().multiplyScalar(ISLE_TOP).addScaledVector(ea,x).addScaledVector(no,y);q.setFromUnitVectors(UP,p.clone().normalize());yq.setFromAxisAngle(UP,rand()*TAU);q.multiply(yq);const s=.008+rand()*.004;M.compose(p,q,new V3(s,s,s));palms.setMatrixAt(np,M);c.setHSL(.3,.1,.86+rand()*.14);palms.setColorAt(np++,c)}
-    reg({id:'isl-'+id,cat:'island',name,place:(lat>20.8&&lon>-80&&lon<-71)?'Bahamas & Turks and Caicos':'Caribbean islands',lat,lon,obj:g,mode:'earth',footR:Math.max(rx*cl,ry)*DEG,stats:[['Belongs to',belongs]].concat(town?[['Main town',town]]:[]),facts:[fact]})});
+    reg({id:'isl-'+id,cat:'island',name,place:['hawaii','maui','oahu','kauai','molokai','lanai','niihau','kahoolawe'].includes(id)?'Hawaiian Islands · Pacific Ocean':(lat>20.8&&lon>-80&&lon<-71)?'Bahamas & Turks and Caicos':'Caribbean islands',lat,lon,obj:g,mode:'earth',footR:Math.max(rx*cl,ry)*DEG,stats:[['Belongs to',belongs]].concat(town?[['Main town',town]]:[]),facts:[fact]})});
   palms.count=np;if(palms.instanceColor)palms.instanceColor.needsUpdate=true;world.add(palms)}
 
 /* ================= CITIES (Civ-style districts + banners) ================= */
@@ -1846,22 +1846,31 @@ $('qHint').onclick=()=>{const q=QUESTS[questIdx];if(!q)return;const it=ITEMS.get
   else{if(mode!=='earth'){toast('Hint','It’s back on Earth');return}const la=it.lat??v2ll(it.obj.position)[0],lo=it.lon??v2ll(it.obj.position)[1];flyTo(la+(rand()-.5)*10,lo+(rand()-.5)*14,1.1);toast('Hint','Look around here…')}};
 let toastT;function toast(ey,name){$('toastEy').textContent=ey;$('toastName').textContent=name;const t=$('toast');t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400)}
 const DEXCATS=[['landmark','Wonders'],['animal','Animals'],['country','Countries'],['island','Islands'],['city','Cities'],['biblical','Biblical Atlas'],['state','U.S. States'],['space','Space']];let dexCat='landmark';
+// Catalog identity is independent of deferred 3D construction, so saved progress
+// and completion targets never shrink when cities or space have not loaded yet.
+const SPACE_IDS=['sun','mercury','venus','earth','moon','mars','belt','jupiter','io','europa','saturn','titan','uranus','neptune','pluto','comet','voyager','proxima','sirius','betelgeuse','pleiades','orion','sgra','andromeda'];
+const DISCOVERY_IDS=new Set([
+ ...LANDMARKS.map(r=>r[0]),...ANIMALS.map(r=>r[0]),...CITIES.map(r=>r[0]),
+ ...COUNTRIES.map(r=>'c-'+r[0].toLowerCase().replace(/[^a-z]+/g,'-')),
+ ...ISLANDS.map(r=>'isl-'+r[0]),...US_STATES.map(r=>'state-'+r[1].toLowerCase()),
+ ...BIBLICAL_SITES.map(r=>'bib-'+r[0]),'iss',...SPACE_IDS
+]);
 function countable(){return[...ITEMS.values()].filter(i=>i.cat!=='vehicle')}
-function discoveryCount(){const ids=new Set(countable().map(i=>i.id));let n=0;for(const id of found)if(ids.has(id))n++;return n}
+function discoveryCount(){const ids=DISCOVERY_IDS;let n=0;for(const id of found)if(ids.has(id))n++;return n}
 function nextMilestone(n,total){if(n>=total)return total;if(n<5)return Math.min(total,5);if(n<10)return Math.min(total,10);return Math.min(total,Math.ceil((n+1)/10)*10)}
 function updateMilestone(){
-  const total=countable().length,n=discoveryCount(),goal=nextMilestone(n,total),prev=n<5?0:n<10?5:Math.max(10,goal-10);
+  const total=DISCOVERY_IDS.size,n=discoveryCount(),goal=nextMilestone(n,total),prev=n<5?0:n<10?5:Math.floor(n/10)*10;
   $('msLabel').textContent=n>=total?'Explorer collection complete':'Next explorer milestone';
   $('msCount').textContent=n>=total?total+' / '+total:n+' / '+goal;
   $('msBar').style.width=(n>=total?100:clamp((n-prev)/Math.max(1,goal-prev),0,1)*100).toFixed(1)+'%';
 }
 function milestoneReached(before,after){
-  const total=countable().length,candidates=[5,10];for(let n=20;n<=total;n+=10)candidates.push(n);
+  const total=DISCOVERY_IDS.size,candidates=[5,10];for(let n=20;n<=total;n+=10)candidates.push(n);if(!candidates.includes(total))candidates.push(total);
   const hit=candidates.find(n=>before<n&&after>=n);if(!hit)return;
   const title=hit>=100?'World Scholar':hit>=50?'Globe Trotter':hit>=20?'Pathfinder':'Trailblazer';
   setTimeout(()=>{toast('Milestone unlocked',title+' · '+hit+' discoveries');blip([523,659,784,1047,1319])},450);
 }
-function updateCounts(){const all=countable();$('dexCount').textContent=`${all.filter(i=>found.has(i.id)).length}/${all.length}`;
+function updateCounts(){const all=countable();$('dexCount').textContent=`${discoveryCount()}/${DISCOVERY_IDS.size}`;
   const n=c=>all.filter(i=>i.cat===c).length;$('stats').textContent=`${n('landmark')} wonders · ${n('country')} countries · ${n('island')} islands · ${n('city')} cities · ${n('animal')} animals · ${n('biblical')} biblical sites · ${n('state')} states · ${n('space')} space stops`;
   document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('seen',found.has(b.dataset.id)));updateMilestone();if(!$('dex').hidden)renderDex()}
 function renderDex(){const all=countable();$('dexSheet').dataset.cat=dexCat;
@@ -1976,7 +1985,7 @@ function goEarth(){if(mode!=='space'||returning)return;returning=true;clearTimeo
 function finishReturn(){$('flash').style.opacity=1;setTimeout(()=>{mode='earth';returning=false;setModeHash('');document.body.classList.remove('space');$('btnLaunch').hidden=false;$('btnEarth').hidden=true;$('strip').hidden=true;$('scaleNote').hidden=true;
   EC.lat=EC.tLat=28;EC.lon=EC.tLon=-80;EC.alt=4.2;EC.tAlt=2.5;EC.k=3;$('flash').style.opacity=0},480)}
 $('btnLaunch').onclick=()=>{initAudio();launch()};$('btnEarth').onclick=goEarth;
-function buildStrip(){const order=['sun','mercury','venus','earth','moon','mars','belt','jupiter','io','europa','saturn','titan','uranus','neptune','pluto','comet','voyager','proxima','sirius','betelgeuse','pleiades','orion','sgra','andromeda'];
+function buildStrip(){const order=SPACE_IDS;
   $('strip').innerHTML=order.map(id=>{const it=ITEMS.get(id);return`<button class="sbtn" data-id="${id}" type="button"><i style="background:${it.dot}"></i>${esc(it.name)}</button>`}).join('');
   $('strip').onclick=e=>{const b=e.target.closest('.sbtn');if(!b||returning)return;const it=ITEMS.get(b.dataset.id);scFlyTo(it);openItem(it,false)}}
 
