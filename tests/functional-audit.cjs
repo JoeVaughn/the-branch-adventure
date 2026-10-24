@@ -25,7 +25,7 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
  assert.equal(await page.evaluate(()=>audit.state().questIdx),0);await page.waitForFunction(()=>audit.state().simulationTime>0);console.log('PASS: visibility change before boot does not freeze simulation');
  assert.equal(await page.locator('#dexCount').innerText(),'2/391');
  await page.locator('#btnAccount').click();const download=page.waitForEvent('download');await page.locator('#downloadSave').click();assert.equal((await download).suggestedFilename(),'branch-adventure-save.json');
- await page.locator('#saveFile').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{}')});assert((await page.locator('#accountStatus').innerText()).includes('not a valid'));
+ await page.locator('#saveFile').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{}')});await page.waitForFunction(()=>document.querySelector('#accountStatus').textContent.includes('not a valid'));
  await page.locator('#saveFile').setInputFiles({name:'branch-adventure-save.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({format:'the-branch-adventure-save',version:1,progress:{found:['c-brazil','eiffel','unknown-id'],q:0}}))});
  await page.waitForFunction(()=>document.querySelector('#accountStatus').textContent.includes('Imported 2'));assert.equal(await page.locator('#dexCount').innerText(),'2/391');assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('tinyplanet.v1')).found.sort()),['c-brazil','eiffel']);await page.locator('#accountClose').click();
  console.log('PASS: local resume, save download, invalid-file rejection and validated import');
