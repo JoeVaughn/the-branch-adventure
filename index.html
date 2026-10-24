@@ -1742,7 +1742,7 @@ canvas.addEventListener('wheel',e=>{e.preventDefault();zoomBy(Math.exp(e.deltaY*
 function zoomBy(f){if(ride){ride.dist=clamp(ride.dist*f,.4,4);return}if(mode==='earth'&&!launchState){EC.tAlt=clamp(EC.tAlt*f,.07,4.4);EC.k=Math.max(EC.k,6)}else if(mode==='space'&&!SC.fly){SC.tDist=clamp(SC.tDist*f,SC.minD,1400)}}
 $('zIn').onclick=()=>zoomBy(.62);$('zOut').onclick=()=>zoomBy(1.6);
 $('zHome').onclick=()=>{if(mode==='earth'){if(launchState)return;stopExperience(false);exitRide();flyTo(EC.tLat,EC.tLon,2.5)}else{scFlyTo(ITEMS.get('sun'),150)}};
-$('zSound').onclick=()=>{soundOn=!soundOn;initAudio();if(audioGain)audioGain.gain.setValueAtTime(soundOn?1:0,actx.currentTime);$('sndWave').style.opacity=soundOn?1:.15;$('zSound').setAttribute('aria-label',soundOn?'Sound on':'Sound off');save()};$('sndWave').style.opacity=soundOn?1:.15;$('zSound').setAttribute('aria-label',soundOn?'Sound on':'Sound off');
+$('zSound').onclick=()=>{soundOn=!soundOn;initAudio();if(audioGain)audioGain.gain.value=soundOn?1:0;$('sndWave').style.opacity=soundOn?1:.15;$('zSound').setAttribute('aria-label',soundOn?'Sound on':'Sound off');save()};$('sndWave').style.opacity=soundOn?1:.15;$('zSound').setAttribute('aria-label',soundOn?'Sound on':'Sound off');
 $('qLbl').textContent=HQ?'HQ':'FAST';$('zQ').setAttribute('aria-label','Graphics quality: '+(HQ?'high':'fast')+'. Tap to switch');
 $('zQ').onclick=()=>{quality=HQ?'fast':'high';save();toast('Graphics',HQ?'Switching to Fast mode…':'Switching to High Quality…');setTimeout(()=>location.reload(),700)};
 
@@ -1978,7 +1978,7 @@ function finishReturn(){$('flash').style.opacity=1;setTimeout(()=>{mode='earth';
 $('btnLaunch').onclick=()=>{initAudio();launch()};$('btnEarth').onclick=goEarth;
 function buildStrip(){const order=['sun','mercury','venus','earth','moon','mars','belt','jupiter','io','europa','saturn','titan','uranus','neptune','pluto','comet','voyager','proxima','sirius','betelgeuse','pleiades','orion','sgra','andromeda'];
   $('strip').innerHTML=order.map(id=>{const it=ITEMS.get(id);return`<button class="sbtn" data-id="${id}" type="button"><i style="background:${it.dot}"></i>${esc(it.name)}</button>`}).join('');
-  $('strip').addEventListener('click',e=>{const b=e.target.closest('.sbtn');if(!b)return;const it=ITEMS.get(b.dataset.id);scFlyTo(it);openItem(it,false)})}
+  $('strip').onclick=e=>{const b=e.target.closest('.sbtn');if(!b||returning)return;const it=ITEMS.get(b.dataset.id);scFlyTo(it);openItem(it,false)}}
 
 /* ================= AUDIO ================= */
 let actx=null,audioGain=null;function initAudio(){try{if(!actx){actx=new(window.AudioContext||window.webkitAudioContext)();audioGain=actx.createGain();audioGain.gain.value=soundOn?1:0;audioGain.connect(actx.destination)}if(actx.state==='suspended')actx.resume().catch(()=>{})}catch(e){}}
@@ -2061,7 +2061,7 @@ async function boot(){
   if(HQ)buildWeatherTexture();buildEarth();buildAtmosphere();buildLight();if(HQ)buildWeatherLayer();$('loadMsg').textContent='Placing landmarks and animals…';await wait(20);
   buildPlaces();buildBiblicalAtlas();buildUSStates();loadCountryBorders();buildIslands();buildGroundTraffic();buildLabels();updateCounts();renderQuest();setupComposer();resize();
   // First interactive scene before decorative terrain instancing.
-  bootReady=true;if(!document.hidden&&!rafId)loop();perfStats.bootMs=Math.round(performance.now()-PERF_START);const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
+  bootReady=true;if(!document.hidden&&!rafId){clock.start();loop()}perfStats.bootMs=Math.round(performance.now()-PERF_START);const L=$('loading');L.style.opacity=0;setTimeout(()=>L.remove(),350);
   // Yield to the compositor, then add distant decorative detail progressively.
   requestAnimationFrame(()=>setTimeout(()=>{
     try{buildMountains();requestAnimationFrame(()=>setTimeout(()=>{try{buildTrees()}catch(e){console.warn('Trees unavailable',e)}},0))}

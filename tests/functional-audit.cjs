@@ -3,13 +3,14 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 // Inject test access into the served response only; the shipped page exposes no mutation API.
 const access=`window.audit={ITEMS,QUESTS,LANDMARKS,ANIMALS,CITIES,ISLANDS,US_STATES,VEHICLES,COUNTRIES,BIBLICAL_SITES,DEXCATS,
  openItem,discover,renderDex,renderQuest,updateCounts,startExperience,stopExperience,experienceFor,experienceUpdate,startRide,exitRide,updateEarth,launch,launchUpdate,ensureSpaceReady,enterSpace,goEarth,scFlyTo,spaceCamUpdate,drawUSStateBoundaries,
- state:()=>({mode,returning,experience:!!experience,ride:!!ride,launch:launchState?.phase,spaceReady,found:[...found],questIdx,quality,spaceItems:spaceItems.length,labels:sLabels.length,picks:spacePick.length,frames:perfStats.frames}),
+ state:()=>({mode,returning,experience:!!experience,ride:!!ride,launch:launchState?.phase,spaceReady,simulationTime:T,found:[...found],questIdx,quality,spaceItems:spaceItems.length,labels:sLabels.length,picks:spacePick.length,frames:perfStats.frames}),
  selectCategory:c=>{dexCat=c;renderDex()}, camera:()=>({alt:EC.tAlt,dist:SC.tDist,focus:SC.focus,fly:SC.fly?.it.id}),
  stopWelcome:()=>clearTimeout(spaceWelcomeTimer), stepLaunch:(dt,t)=>launchState&&launchUpdate(dt,t),
  muteValue:()=>audioGain?.gain.value, progress:()=>({found,questIdx}), renderer,
  failNextSpace:()=>{const original=buildSpace;buildSpace=async()=>{buildSpace=original;const obj=new THREE.Mesh(new THREE.SphereGeometry(1),new THREE.MeshBasicMaterial());spaceScene.add(obj);sItem({id:'test-partial',name:'Partial',obj,r:1});throw Error('Injected space build failure')}},
  questFound:ids=>{found=new Set(ids);questIdx=0;renderQuest();updateCounts()}
-};`;
+};
+Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'));delete document.hidden;document.dispatchEvent(new Event('visibilitychange'));`;
 const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',access+'\nboot().catch(err=>');
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl']});
@@ -21,7 +22,7 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.branchAdventurePerf?.snapshot().bootMs>0,null,{timeout:90000});
  assert.equal(await page.getAttribute('#zSound','aria-label'),'Sound off');
- assert.equal(await page.evaluate(()=>audit.state().questIdx),0);
+ assert.equal(await page.evaluate(()=>audit.state().questIdx),0);await page.waitForFunction(()=>audit.state().simulationTime>0);console.log('PASS: visibility change before boot does not freeze simulation');
  // Real UI: every Dex tab, empty/locked categories, atlas, dismissals, zoom, audio.
  await page.locator('#btnDex').click();
  for(const cat of ['landmark','animal','country','island','city','biblical','state','space']){
@@ -34,7 +35,7 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
  await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>audit.state().experience),false);
  let alt=await page.evaluate(()=>audit.camera().alt);await page.locator('#zIn').click();assert((await page.evaluate(()=>audit.camera().alt))<alt);
  await page.locator('#zOut').click();await page.locator('#zHome').click();
- await page.locator('#zSound').click();assert.equal(await page.evaluate(()=>audit.muteValue()),1);await page.locator('#zSound').click();assert.equal(await page.evaluate(()=>audit.muteValue()),0);
+ await page.locator('#zSound').click();await page.waitForFunction(()=>audit.muteValue()===1);await page.locator('#zSound').click();await page.waitForFunction(()=>audit.muteValue()===0);
  console.log('PASS: Dex categories, Hawaii facts/tour, Escape, zoom/reset and audio mute');
  // A partial initialization failure must release the launch lock and permit retry.
  await page.evaluate(()=>{audit.startExperience(audit.ITEMS.get('c-brazil'));audit.failNextSpace()});
