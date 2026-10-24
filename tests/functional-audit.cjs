@@ -17,7 +17,7 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
  const page=await browser.newPage({viewport:{width:1000,height:720}});page.setDefaultTimeout(60000);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&/THREE.WebGLProgram|VALIDATE_STATUS|shader error|CONTEXT_LOST/i.test(m.text()))errors.push(m.text())});
  await page.route('http://127.0.0.1:8000/',route=>route.fulfill({contentType:'text/html',body:html}));
- await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1','{"ql":"fast","q":"3","found":["c-brazil",null,2],"snd":false}'));
+ await page.addInitScript(()=>{if(!sessionStorage.auditSeeded){localStorage.setItem('tinyplanet.v1','{"ql":"fast","q":"3","found":["c-brazil",null,2],"snd":false}');sessionStorage.auditSeeded='1'}});
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.branchAdventurePerf?.snapshot().bootMs>0,null,{timeout:90000});
  assert.equal(await page.getAttribute('#zSound','aria-label'),'Sound off');

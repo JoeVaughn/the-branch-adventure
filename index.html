@@ -1929,7 +1929,7 @@ const rv=s=>new V3((Math.random()-.5)*s,(Math.random()-.5)*s,(Math.random()-.5)*
 const ctEl=$('count'),ctNum=$('ctNum'),ctMsg=$('ctMsg'),ctArc=$('ctArc');
 const CT_MSG={10:'All systems go',9:'Crew is strapped in',8:'Crew access arm swinging away',7:'Switching to internal power',6:'Water deluge on',5:'Flight computers in control',4:'Engine start sequence',3:'Main engines start!',2:'Engines at full power',1:'Boosters ready…'};
 function tick(k){ctNum.textContent=k;ctMsg.textContent=CT_MSG[k]||'';ctNum.classList.remove('pop');void ctNum.offsetWidth;ctNum.classList.add('pop');blip([k<=3?988:740]);if(k===3)rumble(9)}
-async function launch(){if(mode!=='earth'||launchState)return;stopExperience(false);exitRide();showVehicleRoute(null);$('dex').hidden=true;$('card').hidden=true;const ksc=ITEMS.get('ksc').obj;launchState={phase:'fly',ksc};flyTo(28.2,-80.9,.2);await wait(350);
+async function launch(){if(mode!=='earth'||launchState)return;stopExperience(false);exitRide();$('cardClose').click();$('dex').hidden=true;const ksc=ITEMS.get('ksc').obj;launchState={phase:'fly',ksc};flyTo(28.2,-80.9,.2);await wait(350);
   // Let the camera begin its approach before heavy space generation.
   const preparing=ensureSpaceReady();preparing.catch(()=>{});await wait(1350);
   if(!spaceReady)toast('Fueling the rocket…','Preparing the solar system');try{await preparing}catch(error){launchState=null;ctEl.hidden=true;toast('Launch paused','Space could not load. Please try again.');return}
