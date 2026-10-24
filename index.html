@@ -78,6 +78,8 @@ button:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
 .pill svg{width:16px;height:16px;flex:none}
 .pill.launch{background:linear-gradient(180deg,#ff8e66,var(--coral));border-color:rgba(255,255,255,.25);box-shadow:0 3px 0 var(--coral-deep);color:#fff}
 .pill.launch:hover{background:linear-gradient(180deg,#ffa07c,#ff8662)}
+.pill.account{max-width:220px}
+.pill.account b{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mint)}
 
 .card{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:max(16px,calc(env(safe-area-inset-bottom,0px) + 16px));width:min(360px,calc(100vw - 32px));max-height:min(62vh,560px);display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:22px;overflow:hidden;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 18px 50px rgba(0,0,0,.5);animation:pop .28s cubic-bezier(.2,1.4,.4,1)}
 body.space .card{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
@@ -141,7 +143,7 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
 .toast small{display:block;font-family:var(--f-display);font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
 .toast b{font-family:var(--f-display);font-weight:700;font-size:18px}
 
-.modal{position:fixed;inset:0;background:rgba(3,5,14,.66);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.modal{position:fixed;inset:0;z-index:60;background:rgba(3,5,14,.66);display:grid;place-items:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 .sheet{width:min(820px,100%);max-height:min(86vh,760px);display:flex;flex-direction:column;background:#111833;border:1px solid var(--line);border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .sheet-head{padding:18px 20px 12px;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
 .sheet-head h3{margin:0;font-family:var(--f-display);font-weight:700;font-size:26px;color:var(--sun)}
@@ -155,6 +157,8 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
 .dexbar{height:6px;margin:0 20px 14px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden}
 .dexbar i{display:block;height:100%;background:var(--cat);border-radius:9px;transition:width .4s}
 .grid{padding:0 20px 20px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;min-height:0}
+.account-sheet{width:min(440px,100%);background:#111833;border:1px solid var(--line);border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);overflow:hidden}
+.account-body{padding:0 20px 22px}.account-body p{color:var(--muted);line-height:1.45;margin:0 0 14px}.account-body label{display:block;font-family:var(--f-display);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mint);margin-bottom:6px}.account-body input{box-sizing:border-box;width:100%;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.07);color:var(--ink);font:inherit;font-size:16px;padding:11px 12px;outline:none}.account-body input:focus{border-color:var(--mint);box-shadow:0 0 0 2px rgba(95,224,181,.16)}.account-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.account-actions .primary{background:var(--mint);color:#09271e;box-shadow:0 2px 0 #258a6b}.account-status{min-height:20px;margin-top:10px!important;font-size:12px}.account-status.error{color:#ff9c87}.account-note{font-size:11.5px}.account-current{font-family:var(--f-mono);font-size:12px;color:var(--ink)!important;overflow-wrap:anywhere}
 .cell{text-align:left;border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid var(--line);min-height:62px;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
 .cell b{font-family:var(--f-display);font-weight:600;font-size:14px;line-height:1.15}
 .cell span{font-size:11px;color:var(--muted);font-weight:700}
@@ -231,6 +235,7 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
     </div>
   </div>
   <nav class="pills">
+    <button class="pill account" id="btnAccount" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.8-4.2 3.3-6.3 7.5-6.3s6.7 2.1 7.5 6.3"/></svg><span id="accountLabel">Sign in to save</span><b id="saveState">Guest</b></button>
     <button class="pill" id="btnDex" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Explorer Dex <b id="dexCount">0/0</b></button>
     <button class="pill launch" id="btnLaunch" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c3 2.5 4.5 6 4.5 10l-2 4h-5l-2-4C7.5 8 9 4.5 12 2z"/><circle cx="12" cy="9" r="1.6"/><path d="M9.5 16l-2.5 3M14.5 16l2.5 3M12 18v4"/></svg>Launch to space</button>
     <button class="pill launch" id="btnEarth" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h6l2 3-2 3H4M14 3.5l1 4 4 1M15 20l1-4 4-1"/></svg>Back to Earth</button>
@@ -276,6 +281,28 @@ body.space .zoom{bottom:calc(max(16px,env(safe-area-inset-bottom,0px)) + 74px)}
   </div>
 </div>
 
+<div class="modal" id="accountModal" hidden role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+  <div class="account-sheet">
+    <div class="sheet-head"><h3 id="accountTitle">Save your adventure</h3><button class="x" id="accountClose" type="button" aria-label="Close">×</button></div>
+    <div class="account-body">
+      <div id="signedOutPanel">
+        <p>Enter your email to restore your discoveries and quests on this browser. New visits always begin in Guest mode.</p>
+        <form id="signInForm" novalidate>
+          <label for="accountEmail">Email</label>
+          <input id="accountEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="explorer@example.com" required>
+          <div class="account-actions"><button class="act primary" type="submit">Sign in &amp; restore</button></div>
+        </form>
+      </div>
+      <div id="signedInPanel" hidden>
+        <p>Progress is autosaved for:</p><p class="account-current" id="accountCurrent"></p>
+        <div class="account-actions"><button class="act primary" id="saveNow" type="button">Save now</button><button class="act" id="signOut" type="button">Sign out</button></div>
+      </div>
+      <p class="account-status" id="accountStatus" aria-live="polite"></p>
+      <p class="account-note">Saves stay on this browser. Your email is converted to a private profile key and is not stored or sent anywhere.</p>
+    </div>
+  </div>
+</div>
+
 <div id="loading"><div><div class="logo">The Branch Adventure</div><div class="spinner"></div><p id="loadMsg">Sculpting continents…</p></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -296,11 +323,12 @@ const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const rand=mulberry(20261018);
-function readProgress(){
-  let s={};try{s=JSON.parse(localStorage.getItem('tinyplanet.v1')||'{}')||{}}catch(e){}
-  return {found:Array.isArray(s.found)?s.found.filter(id=>typeof id==='string'&&id.length<120):[],q:Number.isInteger(s.q)&&s.q>=0?s.q:0,snd:s.snd!==false,ql:s.ql==='fast'?'fast':'high'};
+function readProgress(key){
+  let s={};try{s=key?JSON.parse(localStorage.getItem(key)||'{}')||{}:{}}catch(e){}
+  return {found:Array.isArray(s.found)?s.found.filter(id=>typeof id==='string'&&id.length<120):[],q:Number.isInteger(s.q)&&s.q>=0?s.q:0};
 }
-const savedProgress=readProgress();let quality=savedProgress.ql;
+function readSettings(){let s={};try{s=JSON.parse(localStorage.getItem('tinyplanet.settings.v1')||localStorage.getItem('tinyplanet.v1')||'{}')||{}}catch(e){}return{snd:s.snd!==false,ql:s.ql==='fast'?'fast':'high'}}
+const savedProgress=readProgress(),savedSettings=readSettings();let quality=savedSettings.ql;
 const HQ=quality!=='fast';
 const LC=h=>new THREE.Color(h).convertSRGBToLinear(),lin=c=>c.convertSRGBToLinear();
 const WATER_T={value:0},WAVE_A={value:0};let starPts=null,spacePromise=null,spaceReady=false,composer=null;
@@ -1082,9 +1110,10 @@ const QUESTS=[
 
 /* ================= STATE ================= */
 const ITEMS=new Map();const pickables=[];const animators=[];const movers=[];
-let found=new Set(),questIdx=0,soundOn=true;
-found=new Set(savedProgress.found);questIdx=savedProgress.q<=QUESTS.length?savedProgress.q:0;soundOn=savedProgress.snd;
-function save(){try{localStorage.setItem('tinyplanet.v1',JSON.stringify({found:[...found],q:questIdx,snd:soundOn,ql:quality}))}catch(e){}}
+let found=new Set(),questIdx=0,soundOn=savedSettings.snd,activeEmail='',profileKey='';
+found=new Set(savedProgress.found);questIdx=savedProgress.q<=QUESTS.length?savedProgress.q:0;
+function saveSettings(){try{localStorage.setItem('tinyplanet.settings.v1',JSON.stringify({snd:soundOn,ql:quality}))}catch(e){}}
+function save(){saveSettings();if(!profileKey)return false;try{localStorage.setItem(profileKey,JSON.stringify({found:[...found],q:questIdx,updatedAt:new Date().toISOString()}));$('saveState').textContent='Saved';return true}catch(e){$('saveState').textContent='Save failed';return false}}
 function reg(item){ITEMS.set(item.id,item);if(item.obj){item.obj.userData.item=item;pickables.push(item.obj)}return item}
 
 /* ================= BUILD EARTH ================= */
@@ -1742,6 +1771,29 @@ canvas.addEventListener('wheel',e=>{e.preventDefault();zoomBy(Math.exp(e.deltaY*
 function zoomBy(f){if(ride){ride.dist=clamp(ride.dist*f,.4,4);return}if(mode==='earth'&&!launchState){EC.tAlt=clamp(EC.tAlt*f,.07,4.4);EC.k=Math.max(EC.k,6)}else if(mode==='space'&&!SC.fly){SC.tDist=clamp(SC.tDist*f,SC.minD,1400)}}
 $('zIn').onclick=()=>zoomBy(.62);$('zOut').onclick=()=>zoomBy(1.6);
 $('zHome').onclick=()=>{if(mode==='earth'){if(launchState)return;stopExperience(false);exitRide();flyTo(EC.tLat,EC.tLon,2.5)}else{scFlyTo(ITEMS.get('sun'),150)}};
+function accountUI(message='',error=false){
+  $('accountLabel').textContent=activeEmail||'Sign in to save';$('saveState').textContent=activeEmail?'Saved':'Guest';
+  $('signedOutPanel').hidden=!!activeEmail;$('signedInPanel').hidden=!activeEmail;$('accountCurrent').textContent=activeEmail;
+  $('accountStatus').textContent=message;$('accountStatus').classList.toggle('error',error);
+}
+function applyProgress(progress){found=new Set(progress.found);questIdx=Math.min(progress.q,QUESTS.length);$('cardClose').click();updateCounts();renderQuest()}
+async function profileKeyFor(email){
+  if(!crypto?.subtle)throw Error('Secure profile storage needs HTTPS or localhost.');
+  const bytes=new TextEncoder().encode(email),digest=await crypto.subtle.digest('SHA-256',bytes);
+  return'tinyplanet.profile.v1.'+[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function openAccount(){accountUI();$('accountModal').hidden=false;setTimeout(()=>activeEmail?$('saveNow').focus():$('accountEmail').focus(),0)}
+$('btnAccount').onclick=openAccount;$('accountClose').onclick=()=>$('accountModal').hidden=true;
+$('accountModal').addEventListener('click',e=>{if(e.target.id==='accountModal')$('accountModal').hidden=true});
+$('signInForm').addEventListener('submit',async e=>{
+  e.preventDefault();const email=$('accountEmail').value.trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){accountUI('Enter a valid email address.',true);return}
+  try{accountUI('Restoring progress…');const key=await profileKeyFor(email),progress=readProgress(key);activeEmail=email;profileKey=key;applyProgress(progress);accountUI(progress.found.length?`Restored ${progress.found.length} discoveries.`:'New explorer profile ready.');toast('Explorer signed in',progress.found.length?'Progress restored':'Adventure ready')}
+  catch(error){accountUI(error.message||'Could not open this profile.',true)}
+});
+$('saveNow').onclick=()=>accountUI(save()?'Progress saved on this browser.':'Could not save progress.',!profileKey);
+$('signOut').onclick=()=>{save();activeEmail='';profileKey='';applyProgress(readProgress());accountUI('Signed out. Guest progress starts empty.');toast('Signed out','Guest adventure reset')};
+accountUI();
 $('zSound').onclick=()=>{soundOn=!soundOn;initAudio();if(audioGain)audioGain.gain.value=soundOn?1:0;$('sndWave').style.opacity=soundOn?1:.15;$('zSound').setAttribute('aria-label',soundOn?'Sound on':'Sound off');save()};$('sndWave').style.opacity=soundOn?1:.15;$('zSound').setAttribute('aria-label',soundOn?'Sound on':'Sound off');
 $('qLbl').textContent=HQ?'HQ':'FAST';$('zQ').setAttribute('aria-label','Graphics quality: '+(HQ?'high':'fast')+'. Tap to switch');
 $('zQ').onclick=()=>{quality=HQ?'fast':'high';save();toast('Graphics',HQ?'Switching to Fast mode…':'Switching to High Quality…');setTimeout(()=>location.reload(),700)};
@@ -1883,7 +1935,7 @@ $('dexGrid').addEventListener('click',e=>{const b=e.target.closest('.cell.seen')
   if(it.cat==='biblical'||it.cat==='state')discover(it);
   if(it.mode==='earth'&&mode==='earth'){exitRide();if(it.lat!==undefined)flyTo(it.lat,it.lon,it.cat==='country'?.9:.25);else if(it.obj){const[la,lo]=v2ll(it.obj.position);flyTo(la,lo,.6)}}
   else if(it.mode==='space'&&mode==='space'&&it.obj)scFlyTo(it)});
-addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('dex').hidden){$('dex').hidden=true;return}$('cardClose').click();stopExperience(false);if(ride)exitRide()}});
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(!$('accountModal').hidden){$('accountModal').hidden=true;return}if(!$('dex').hidden){$('dex').hidden=true;return}$('cardClose').click();stopExperience(false);if(ride)exitRide()}});
 
 /* ================= RIDE ================= */
 function startRide(it){if(mode!=='earth'||launchState||!it?.ride)return;stopExperience(false);ride={it,yaw:0,pitch:.25,dist:1};$('ride').hidden=false;$('rideName').textContent=it.name;$('card').hidden=true;discover(it)}

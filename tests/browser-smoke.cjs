@@ -1,8 +1,10 @@
 const {chromium}=require('playwright');
+const {createHash}=require('node:crypto');
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--disable-web-security']});
  let page=await browser.newPage({viewport:{width:1280,height:800}});
- await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'high',found:['c-brazil']})));
+ const email='browser-smoke@example.com',profileKey='tinyplanet.profile.v1.'+createHash('sha256').update(email).digest('hex');
+ await page.addInitScript(({profileKey})=>{localStorage.setItem('tinyplanet.settings.v1',JSON.stringify({ql:'high'}));localStorage.setItem(profileKey,JSON.stringify({found:['c-brazil'],q:0}))},{profileKey});
  const errors=[];
  // Freeze through the app's background-tab lifecycle only during capture.
  // SwiftShader can starve Chrome's compositor when a continuous WebGL loop is active.
@@ -17,6 +19,7 @@ const {chromium}=require('playwright');
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>Boolean(window.branchAdventurePerf?.snapshot().bootMs>0&&document.querySelector('#gl')),null,{timeout:90000});
  await page.waitForTimeout(1200);
+ await page.locator('#btnAccount').click();await page.locator('#accountEmail').fill(email);await page.locator('#signInForm button').click();await page.waitForFunction(()=>document.querySelector('#saveState').textContent==='Saved');await page.locator('#accountClose').click();
  const state=await page.evaluate(()=>({canvas:!!document.querySelector('#gl'),perf:window.branchAdventurePerf.snapshot(),loading:!!document.querySelector('#loading'),body:document.body.innerText.slice(0,100)}));
  await capture(page,{path:'earth-smoke.png'});
  if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));
@@ -56,7 +59,7 @@ const {chromium}=require('playwright');
  // Exercise the deferred space-loading path as well as the initial Earth render.
  await page.close();
  page=await browser.newPage({viewport:{width:1280,height:800}});
- await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'fast'})));
+ await page.addInitScript(()=>localStorage.setItem('tinyplanet.settings.v1',JSON.stringify({ql:'fast'})));
  watch(page);
  await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded',timeout:90000});
  await page.waitForFunction(()=>window.branchAdventurePerf&&window.branchAdventurePerf.snapshot().mode==='space',null,{timeout:120000});
@@ -71,7 +74,7 @@ const {chromium}=require('playwright');
  // Compile the HQ-only corona and inspect the lit rings in a real WebGL context.
  await page.close();
  page=await browser.newPage({viewport:{width:1280,height:800}});watch(page);
- await page.addInitScript(()=>localStorage.setItem('tinyplanet.v1',JSON.stringify({ql:'high'})));
+ await page.addInitScript(()=>localStorage.setItem('tinyplanet.settings.v1',JSON.stringify({ql:'high'})));
  await page.goto('http://127.0.0.1:8000/#space',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.branchAdventurePerf?.snapshot().mode==='space',null,{timeout:120000});
  await page.locator('.sbtn[data-id="saturn"]').click();
