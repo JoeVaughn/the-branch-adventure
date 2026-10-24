@@ -1,7 +1,7 @@
 name: Static regression checks
 on:
   push:
-    branches: [feature/graphics-performance-v1]
+    branches: [main]
   pull_request:
     branches: [main]
 jobs:
@@ -13,3 +13,4 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/static-check.cjs
+      - run: node tests/logic-regression.cjs
