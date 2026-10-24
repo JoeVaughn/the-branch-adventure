@@ -1,10 +1,8 @@
 const {chromium}=require('playwright');
-const {createHash}=require('node:crypto');
 (async()=>{
  const browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-webgl','--disable-web-security']});
  let page=await browser.newPage({viewport:{width:1280,height:800}});
- const email='browser-smoke@example.com',profileKey='tinyplanet.profile.v1.'+createHash('sha256').update(email).digest('hex');
- await page.addInitScript(({profileKey})=>{localStorage.setItem('tinyplanet.settings.v1',JSON.stringify({ql:'high'}));localStorage.setItem(profileKey,JSON.stringify({found:['c-brazil'],q:0}))},{profileKey});
+ await page.addInitScript(()=>{localStorage.setItem('tinyplanet.settings.v1',JSON.stringify({ql:'high'}));localStorage.setItem('tinyplanet.v1',JSON.stringify({found:['c-brazil'],q:0}))});
  const errors=[];
  // Freeze through the app's background-tab lifecycle only during capture.
  // SwiftShader can starve Chrome's compositor when a continuous WebGL loop is active.
@@ -19,7 +17,6 @@ const {createHash}=require('node:crypto');
  await page.goto('http://127.0.0.1:8000/',{waitUntil:'domcontentloaded',timeout:30000});
  await page.waitForFunction(()=>Boolean(window.branchAdventurePerf?.snapshot().bootMs>0&&document.querySelector('#gl')),null,{timeout:90000});
  await page.waitForTimeout(1200);
- await page.locator('#btnAccount').click();await page.locator('#accountEmail').fill(email);await page.locator('#signInForm button').click();await page.waitForFunction(()=>document.querySelector('#saveState').textContent==='Saved');await page.locator('#accountClose').click();
  const state=await page.evaluate(()=>({canvas:!!document.querySelector('#gl'),perf:window.branchAdventurePerf.snapshot(),loading:!!document.querySelector('#loading'),body:document.body.innerText.slice(0,100)}));
  await capture(page,{path:'earth-smoke.png'});
  if(errors.length)throw Error('Browser JavaScript errors: '+errors.join(' | '));

@@ -3,7 +3,7 @@ const fs=require('node:fs'),assert=require('node:assert/strict');
 // Inject test access into the served response only; the shipped page exposes no mutation API.
 const access=`window.audit={ITEMS,DISCOVERY_IDS,QUESTS,LANDMARKS,ANIMALS,CITIES,ISLANDS,US_STATES,VEHICLES,COUNTRIES,BIBLICAL_SITES,DEXCATS,
  openItem,discover,renderDex,renderQuest,updateCounts,startExperience,stopExperience,experienceFor,experienceUpdate,startRide,exitRide,updateEarth,launch,launchUpdate,ensureSpaceReady,enterSpace,goEarth,scFlyTo,spaceCamUpdate,drawUSStateBoundaries,
- state:()=>({mode,returning,experience:!!experience,ride:!!ride,launch:launchState?.phase,spaceReady,simulationTime:T,found:[...found],questIdx,quality,activeEmail,spaceItems:spaceItems.length,labels:sLabels.length,picks:spacePick.length,frames:perfStats.frames}),
+ state:()=>({mode,returning,experience:!!experience,ride:!!ride,launch:launchState?.phase,spaceReady,simulationTime:T,found:[...found],questIdx,quality,spaceItems:spaceItems.length,labels:sLabels.length,picks:spacePick.length,frames:perfStats.frames}),
  selectCategory:c=>{dexCat=c;renderDex()}, camera:()=>({alt:EC.tAlt,dist:SC.tDist,focus:SC.focus,fly:SC.fly?.it.id}),
  stopWelcome:()=>clearTimeout(spaceWelcomeTimer), stepLaunch:(dt,t)=>launchState&&launchUpdate(dt,t),
  muteValue:()=>audioGain?.gain.value, progress:()=>({found,questIdx}), renderer,
@@ -23,13 +23,12 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
  await page.waitForFunction(()=>window.branchAdventurePerf?.snapshot().bootMs>0,null,{timeout:90000});
  assert.equal(await page.getAttribute('#zSound','aria-label'),'Sound off');
  assert.equal(await page.evaluate(()=>audit.state().questIdx),0);await page.waitForFunction(()=>audit.state().simulationTime>0);console.log('PASS: visibility change before boot does not freeze simulation');
- assert.equal(await page.locator('#dexCount').innerText(),'0/391');
- await page.locator('#btnAccount').click();await page.locator('#accountEmail').fill('bad');await page.locator('#signInForm button').click();assert((await page.locator('#accountStatus').innerText()).includes('valid email'));
- await page.locator('#accountEmail').fill('Explorer@Example.com');await page.locator('#signInForm button').click();await page.waitForFunction(()=>audit.state().activeEmail==='explorer@example.com');
- await page.evaluate(()=>{audit.discover(audit.ITEMS.get('c-brazil'));audit.discover(audit.ITEMS.get('eiffel'))});assert.equal(await page.locator('#dexCount').innerText(),'2/391');
- assert.equal(await page.evaluate(()=>Object.keys(localStorage).filter(k=>k.startsWith('tinyplanet.profile.v1.')).length),1);
- assert.equal(await page.evaluate(()=>JSON.stringify(localStorage).includes('explorer@example.com')),false);await page.locator('#accountClose').click();
- console.log('PASS: guest reset, email validation, hashed profile key and signed-in autosave');
+ assert.equal(await page.locator('#dexCount').innerText(),'2/391');
+ await page.locator('#btnAccount').click();const download=page.waitForEvent('download');await page.locator('#downloadSave').click();assert.equal((await download).suggestedFilename(),'branch-adventure-save.json');
+ await page.locator('#saveFile').setInputFiles({name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{}')});assert((await page.locator('#accountStatus').innerText()).includes('not a valid'));
+ await page.locator('#saveFile').setInputFiles({name:'branch-adventure-save.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({format:'the-branch-adventure-save',version:1,progress:{found:['c-brazil','eiffel','unknown-id'],q:0}}))});
+ await page.waitForFunction(()=>document.querySelector('#accountStatus').textContent.includes('Imported 2'));assert.equal(await page.locator('#dexCount').innerText(),'2/391');assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('tinyplanet.v1')).found.sort()),['c-brazil','eiffel']);await page.locator('#accountClose').click();
+ console.log('PASS: local resume, save download, invalid-file rejection and validated import');
  // Real UI: every Dex tab, empty/locked categories, atlas, dismissals, zoom, audio.
  await page.locator('#btnDex').click();
  for(const cat of ['landmark','animal','country','island','city','biblical','state','space']){
@@ -66,7 +65,7 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
    let tours=0,rides=0;
    for(const it of all){if(a.experienceFor(it)){a.startExperience(it);if(!a.state().experience)fail('Tour '+it.id);for(let t=0;t<30;t++)a.experienceUpdate(1);if(a.state().experience)fail('Tour did not finish '+it.id);tours++}
      if(it.ride){a.updateEarth(.016,1);a.startRide(it);a.updateEarth(.016,1);if(!a.state().ride)fail('Ride '+it.id);a.exitRide();rides++}}
-   const ids=a.QUESTS.slice(0,3).map(q=>q[0]);a.questFound(ids);if(a.state().questIdx!==3)fail('Quest reconciliation');const profileKey=Object.keys(localStorage).find(k=>k.startsWith('tinyplanet.profile.v1.'));if(JSON.parse(localStorage.getItem(profileKey)).q!==3)fail('Quest not persisted');
+   const ids=a.QUESTS.slice(0,3).map(q=>q[0]);a.questFound(ids);if(a.state().questIdx!==3)fail('Quest reconciliation');if(JSON.parse(localStorage.getItem('tinyplanet.v1')).q!==3)fail('Quest not persisted');
    a.questFound([...a.ITEMS.values()].filter(i=>i.cat!=='vehicle').slice(0,5).map(i=>i.id));if(!document.querySelector('#msCount').textContent.includes('/ 10'))fail('Milestone 5 -> 10');
    const collection=[...a.DISCOVERY_IDS];a.questFound(collection.slice(0,390));if(document.querySelector('#msBar').style.width!=='0%')fail('Final milestone interval');a.questFound(collection);if(!document.querySelector('#msLabel').textContent.includes('complete'))fail('Completion label');
    for(const topology of [null,{}, {objects:{states:{}},transform:{}}]){let caught=false;try{a.drawUSStateBoundaries(topology)}catch{caught=true}if(!caught)fail('Invalid boundaries silently accepted')}
@@ -97,10 +96,8 @@ const html=fs.readFileSync('index.html','utf8').replace('boot().catch(err=>',acc
  await page.locator('#zQ').click();await page.waitForFunction(()=>document.querySelector('#qLbl')?.textContent==='HQ',null,{timeout:90000});
  await page.waitForFunction(()=>window.branchAdventurePerf?.snapshot().bootMs>0,null,{timeout:90000});
  assert.equal(await page.evaluate(()=>audit.state().quality),'high');assert.equal(await page.evaluate(()=>audit.state().mode),'earth');
- assert.equal((await page.evaluate(()=>audit.state().found)).length,0);assert.equal(await page.locator('#saveState').innerText(),'Guest');
- await page.locator('#btnAccount').click();await page.locator('#accountEmail').fill('EXPLORER@example.com');await page.locator('#signInForm button').click();await page.waitForFunction(()=>audit.state().activeEmail==='explorer@example.com');
  assert((await page.evaluate(()=>audit.state().found)).length>=5);
- await page.locator('#signOut').click();assert.equal((await page.evaluate(()=>audit.state().found)).length,0);assert.equal(await page.locator('#saveState').innerText(),'Guest');
- assert.deepEqual(errors,[]);console.log('PASS: quality reload, signed-in restore, sign-out reset and runtime/shader checks');
+ assert.equal(await page.locator('#saveState').innerText(),'Saved');
+ assert.deepEqual(errors,[]);console.log('PASS: quality reload, automatic local restore and runtime/shader checks');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});
